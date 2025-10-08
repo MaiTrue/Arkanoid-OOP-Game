@@ -1,24 +1,18 @@
-import graphics.BrickDisplay;
+package graphics;
+
 import constants.GameConfig;
-import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class Main extends Application {
-
-    @Override
-    public void start(Stage stage) {
+public class Game {
+    public void show(Stage stage) {
         BrickDisplay brickDisplay = new BrickDisplay();
-        Group root = brickDisplay.getBrickDisplay();
+        Group root = new Group(brickDisplay.getBrickDisplay());
 
         Scene scene = new Scene(root, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
         stage.setTitle("Arkanoid");
         stage.setScene(scene);
         stage.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }
