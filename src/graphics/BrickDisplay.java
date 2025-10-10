@@ -10,6 +10,8 @@ public class BrickDisplay {
     private Image backgroundImage;
     private Image[] brickImage;
     private Random random = new Random();
+    private Image paddleImage;
+    private Image ballImage;
 
     public BrickDisplay() {
         brickImage = new Image[] {
@@ -21,7 +23,9 @@ public class BrickDisplay {
                 new Image(getClass().getClassLoader().getResourceAsStream("image/silver.png")),
                 new Image(getClass().getClassLoader().getResourceAsStream("image/cyan.png")),
         };
-        backgroundImage = new Image(getClass().getClassLoader().getResourceAsStream("image/silun.jpg"));
+        backgroundImage = new Image(getClass().getClassLoader().getResourceAsStream("image/background.jpg"));
+        paddleImage = new Image(getClass().getClassLoader().getResourceAsStream("image/paddle.png"));
+        ballImage = new Image(getClass().getClassLoader().getResourceAsStream("image/ball.png"));
     }
 
     public Group getBrickDisplay() {
@@ -48,6 +52,21 @@ public class BrickDisplay {
                 brickGroup.getChildren().add(brickView);
             }
         }
+
+        ImageView paddleView = new ImageView(paddleImage);
+        paddleView.setFitWidth(GameConfig.PADDLE_WIDTH);
+        paddleView.setFitHeight(GameConfig.PADDLE_HEIGHT);
+        paddleView.setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0);
+        paddleView.setY(GameConfig.WINDOW_HEIGHT - 50);
+        brickGroup.getChildren().add(paddleView);
+
+        ImageView ballView = new ImageView(ballImage);
+        ballView.setFitWidth(GameConfig.BALL_SIZE);
+        ballView.setFitHeight(GameConfig.BALL_SIZE);
+        ballView.setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0);
+        ballView.setY(GameConfig.WINDOW_HEIGHT - 80);
+        brickGroup.getChildren().add(ballView);
+
         return brickGroup;
     }
 }
