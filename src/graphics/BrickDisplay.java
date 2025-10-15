@@ -9,45 +9,43 @@ import java.util.Random;
 
 public class BrickDisplay {
     private Image backgroundImage;
-    private Image[] brickImage;
-    private Random random = new Random();
+    private Image[] brickImages;
+    private final Random random = new Random();
     private Image paddleImage;
     private Image ballImage;
 
     public BrickDisplay() {
-        brickImage = new Image[]{
-                new Image(getClass().getClassLoader().getResourceAsStream("image/blue.png")),
-                new Image(getClass().getClassLoader().getResourceAsStream("image/red.png")),
-                new Image(getClass().getClassLoader().getResourceAsStream("image/gold.png")),
-                new Image(getClass().getClassLoader().getResourceAsStream("image/green.png")),
-                new Image(getClass().getClassLoader().getResourceAsStream("image/pink.png")),
-                new Image(getClass().getClassLoader().getResourceAsStream("image/silver.png")),
-                new Image(getClass().getClassLoader().getResourceAsStream("image/cyan.png")),
-        };
+        // Đường dẫn ảnh tuyệt đối trong thư mục project
+        backgroundImage = new Image("file:src/image/background.jpg");
+        paddleImage = new Image("file:src/image/paddle.png");
+        ballImage = new Image("file:src/image/ball.png");
 
-        backgroundImage = new Image(getClass().getClassLoader().getResourceAsStream("image/background.jpg"));
-        paddleImage = new Image(getClass().getClassLoader().getResourceAsStream("image/paddle.png"));
-        ballImage = new Image(getClass().getClassLoader().getResourceAsStream("image/ball.png"));
+        brickImages = new Image[]{
+                new Image("file:src/image/blue.png"),
+                new Image("file:src/image/red.png"),
+                new Image("file:src/image/gold.png"),
+                new Image("file:src/image/green.png"),
+                new Image("file:src/image/pink.png"),
+                new Image("file:src/image/silver.png"),
+                new Image("file:src/image/cyan.png"),
+        };
     }
 
-    /**
-     * Tạo mới toàn bộ nhóm gạch và nền.
-     * Mỗi lần gọi hàm này sẽ sinh lại toàn bộ gạch mới — dùng để reset màn chơi.
-     */
+    /** Tạo toàn bộ màn hình với nền + gạch */
     public Group getBrickDisplay() {
-        Group brickGroup = new Group();
+        Group group = new Group();
 
-        // Nền game
+        // 1️⃣ Thêm background trước
         ImageView backgroundView = new ImageView(backgroundImage);
         backgroundView.setFitWidth(GameConfig.WINDOW_WIDTH);
         backgroundView.setFitHeight(GameConfig.WINDOW_HEIGHT);
-        brickGroup.getChildren().add(backgroundView);
+        group.getChildren().add(backgroundView);
 
-        // Sinh mới toàn bộ gạch
+        // 2️⃣ Sau đó thêm gạch
         for (int row = 0; row < GameConfig.BRICK_ROWS; row++) {
             for (int col = 0; col < GameConfig.BRICK_COLS; col++) {
-                Image selectedImage = brickImage[random.nextInt(brickImage.length)];
-                ImageView brickView = new ImageView(selectedImage);
+                Image brickImg = brickImages[random.nextInt(brickImages.length)];
+                ImageView brickView = new ImageView(brickImg);
 
                 double x = col * (GameConfig.BRICK_WIDTH + GameConfig.BRICK_MARGIN) + 28;
                 double y = row * (GameConfig.BRICK_HEIGHT + GameConfig.BRICK_MARGIN) + 25;
@@ -57,16 +55,13 @@ public class BrickDisplay {
                 brickView.setFitWidth(GameConfig.BRICK_WIDTH);
                 brickView.setFitHeight(GameConfig.BRICK_HEIGHT);
 
-                brickGroup.getChildren().add(brickView);
+                group.getChildren().add(brickView);
             }
         }
 
-        return brickGroup;
+        return group;
     }
 
-    /**
-     * Hàm reset toàn bộ màn chơi — có thể gọi khi bắt đầu lượt mới.
-     */
     public Group resetBricks() {
         return getBrickDisplay();
     }
