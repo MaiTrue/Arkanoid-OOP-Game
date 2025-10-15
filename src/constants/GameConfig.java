@@ -14,5 +14,5 @@ public class GameConfig {
     public static final double PADDLE_HEIGHT = 30;
     public static final double BALL_SIZE = 25;
 
+    public static final double PADDLE_SPEED = 700.0;
 }
-

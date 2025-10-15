@@ -4,6 +4,7 @@ import constants.GameConfig;
 import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+
 import java.util.Random;
 
 public class BrickDisplay {
@@ -14,7 +15,7 @@ public class BrickDisplay {
     private Image ballImage;
 
     public BrickDisplay() {
-        brickImage = new Image[] {
+        brickImage = new Image[]{
                 new Image(getClass().getClassLoader().getResourceAsStream("image/blue.png")),
                 new Image(getClass().getClassLoader().getResourceAsStream("image/red.png")),
                 new Image(getClass().getClassLoader().getResourceAsStream("image/gold.png")),
@@ -23,19 +24,26 @@ public class BrickDisplay {
                 new Image(getClass().getClassLoader().getResourceAsStream("image/silver.png")),
                 new Image(getClass().getClassLoader().getResourceAsStream("image/cyan.png")),
         };
+
         backgroundImage = new Image(getClass().getClassLoader().getResourceAsStream("image/background.jpg"));
         paddleImage = new Image(getClass().getClassLoader().getResourceAsStream("image/paddle.png"));
         ballImage = new Image(getClass().getClassLoader().getResourceAsStream("image/ball.png"));
     }
 
+    /**
+     * Tạo mới toàn bộ nhóm gạch và nền.
+     * Mỗi lần gọi hàm này sẽ sinh lại toàn bộ gạch mới — dùng để reset màn chơi.
+     */
     public Group getBrickDisplay() {
         Group brickGroup = new Group();
 
+        // Nền game
         ImageView backgroundView = new ImageView(backgroundImage);
         backgroundView.setFitWidth(GameConfig.WINDOW_WIDTH);
         backgroundView.setFitHeight(GameConfig.WINDOW_HEIGHT);
         brickGroup.getChildren().add(backgroundView);
 
+        // Sinh mới toàn bộ gạch
         for (int row = 0; row < GameConfig.BRICK_ROWS; row++) {
             for (int col = 0; col < GameConfig.BRICK_COLS; col++) {
                 Image selectedImage = brickImage[random.nextInt(brickImage.length)];
@@ -53,20 +61,21 @@ public class BrickDisplay {
             }
         }
 
-        ImageView paddleView = new ImageView(paddleImage);
-        paddleView.setFitWidth(GameConfig.PADDLE_WIDTH);
-        paddleView.setFitHeight(GameConfig.PADDLE_HEIGHT);
-        paddleView.setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0);
-        paddleView.setY(GameConfig.WINDOW_HEIGHT - 50);
-        brickGroup.getChildren().add(paddleView);
-
-        ImageView ballView = new ImageView(ballImage);
-        ballView.setFitWidth(GameConfig.BALL_SIZE);
-        ballView.setFitHeight(GameConfig.BALL_SIZE);
-        ballView.setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0);
-        ballView.setY(GameConfig.WINDOW_HEIGHT - 80);
-        brickGroup.getChildren().add(ballView);
-
         return brickGroup;
+    }
+
+    /**
+     * Hàm reset toàn bộ màn chơi — có thể gọi khi bắt đầu lượt mới.
+     */
+    public Group resetBricks() {
+        return getBrickDisplay();
+    }
+
+    public Image getPaddleImage() {
+        return paddleImage;
+    }
+
+    public Image getBallImage() {
+        return ballImage;
     }
 }
