@@ -1,3 +1,4 @@
+package  image;
 import graphics.BrickDisplay;
 import constants.GameConfig;
 import javafx.application.Application;
