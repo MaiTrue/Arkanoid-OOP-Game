@@ -15,12 +15,6 @@ public class BrickDisplay {
     private Image ballImage;
 
     public BrickDisplay() {
-        // Đường dẫn ảnh tuyệt đối trong thư mục project
-        System.out.println("Background: " + getClass().getResource("/image/background.jpg"));
-        System.out.println("Current dir: " + System.getProperty("user.dir"));
-        System.out.println("ClassLoader: " + getClass().getClassLoader().getResource("image/background.jpg"));
-
-        backgroundImage = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
         paddleImage = new Image(getClass().getResource("/image/paddle.png").toExternalForm());
         ballImage = new Image(getClass().getResource("/image/ball.png").toExternalForm());
 
@@ -39,14 +33,7 @@ public class BrickDisplay {
     public Group getBrickDisplay() {
         Group group = new Group();
 
-        // Thêm background trước
-        ImageView backgroundView = new ImageView(backgroundImage);
-        backgroundView.setFitWidth(GameConfig.WINDOW_WIDTH);
-        backgroundView.setFitHeight(GameConfig.WINDOW_HEIGHT);
-        group.getChildren().add(backgroundView);
-        backgroundView.toBack();
-
-        // Sau đó thêm gạch
+        // thêm gạch
         for (int row = 0; row < GameConfig.BRICK_ROWS; row++) {
             for (int col = 0; col < GameConfig.BRICK_COLS; col++) {
                 Image brickImg = brickImages[random.nextInt(brickImages.length)];
