@@ -57,7 +57,7 @@ public class GamePanel extends Pane {
         startGameLoop();
     }
 
-    /** Xử lý phím điều khiển trái/phải */
+    // Xử lý phím điều khiển trái/phải
     private void setupControls() {
         this.setOnKeyPressed(e -> {
             switch (e.getCode()) {
@@ -73,8 +73,8 @@ public class GamePanel extends Pane {
         });
     }
 
-    /** Nút restart */
-    private void setupRestartButton() {
+    // Nút restart
+  private void setupRestartButton() {
         restartButton = new Button("Restart");
         restartButton.setLayoutX(GameConfig.WINDOW_WIDTH / 2.0 - 50);
         restartButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 50);
@@ -84,7 +84,7 @@ public class GamePanel extends Pane {
         this.getChildren().add(restartButton);
     }
 
-    /** Vòng lặp game */
+    // Vòng lặp game
     private void startGameLoop() {
         AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -105,7 +105,7 @@ public class GamePanel extends Pane {
         timer.start();
     }
 
-    /** Hàm cập nhật logic game */
+    // Hàm cập nhật logic game
     private void update(double deltaTime) {
         gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
@@ -146,7 +146,7 @@ public class GamePanel extends Pane {
         }
     }
 
-    /** Hiển thị thông báo thua */
+    // Hiển thị thông báo thua
     private void showGameOver() {
         gc.setFill(Color.RED);
         gc.setFont(new Font("Arial", 36));
@@ -154,7 +154,7 @@ public class GamePanel extends Pane {
         restartButton.setVisible(true);
     }
 
-    /** Reset toàn bộ trạng thái */
+    // Reset toàn bộ trạng thái
     private void restartGame() {
         gameOver = false;
         restartButton.setVisible(false);

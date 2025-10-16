@@ -1,11 +1,11 @@
 package constants;
 
 public class GameConfig {
-    public static final int WINDOW_WIDTH = 800;
-    public static final int WINDOW_HEIGHT = 600;
+    public static final int WINDOW_WIDTH = 1000;
+    public static final int WINDOW_HEIGHT = 770;
 
-    public static final int BRICK_ROWS = 6;
-    public static final int BRICK_COLS = 10;
+    public static final int BRICK_ROWS = 9;
+    public static final int BRICK_COLS = 12;
     public static final int BRICK_WIDTH = 70;
     public static final int BRICK_HEIGHT = 30;
     public static final int BRICK_MARGIN = 5;

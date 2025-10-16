@@ -71,7 +71,7 @@ public class Game {
 
         //  Focus để bắt phím
         scene.setOnMouseClicked(e -> root.requestFocus());
-        stage.setTitle("Arkanoid - JavaFX");
+        stage.setTitle("baiTapLonAnhEmBoTuc");
         stage.setScene(scene);
         stage.show();
 

@@ -39,7 +39,7 @@ public class Ball {
         dy = -dy;
     }
 
-    // ✅ Khi bóng chạm vào paddle chỉ nảy nếu va vào mặt trên
+    // Khi bóng chạm vào paddle chỉ nảy nếu va vào mặt trên
     public boolean hitPaddle(Paddle paddle) {
         double ballBottom = getY() + getHeight();
         double paddleTop = paddle.getY();

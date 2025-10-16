@@ -35,25 +35,25 @@ public class BrickDisplay {
         };
     }
 
-    /** Tạo toàn bộ màn hình với nền + gạch */
+    // Tạo toàn bộ màn hình với nền + gạch
     public Group getBrickDisplay() {
         Group group = new Group();
 
-        // 1️⃣ Thêm background trước
+        // Thêm background trước
         ImageView backgroundView = new ImageView(backgroundImage);
         backgroundView.setFitWidth(GameConfig.WINDOW_WIDTH);
         backgroundView.setFitHeight(GameConfig.WINDOW_HEIGHT);
         group.getChildren().add(backgroundView);
         backgroundView.toBack();
 
-        // 2️⃣ Sau đó thêm gạch
+        // Sau đó thêm gạch
         for (int row = 0; row < GameConfig.BRICK_ROWS; row++) {
             for (int col = 0; col < GameConfig.BRICK_COLS; col++) {
                 Image brickImg = brickImages[random.nextInt(brickImages.length)];
                 ImageView brickView = new ImageView(brickImg);
 
-                double x = col * (GameConfig.BRICK_WIDTH + GameConfig.BRICK_MARGIN) + 28;
-                double y = row * (GameConfig.BRICK_HEIGHT + GameConfig.BRICK_MARGIN) + 25;
+                double x = col * (GameConfig.BRICK_WIDTH + GameConfig.BRICK_MARGIN) + 52;
+                double y = row * (GameConfig.BRICK_HEIGHT + GameConfig.BRICK_MARGIN) + 100;
 
                 brickView.setX(x);
                 brickView.setY(y);

@@ -34,7 +34,7 @@ public class Paddle {
         return paddleView.getFitHeight();
     }
 
-    /** Di chuyển sang trái — có deltaTime để mượt hơn */
+    // Di chuyển sang trái — có deltaTime để mượt hơn
     public void moveLeft(double deltaTime) {
         double speed = 600; // pixel mỗi giây
         double newX = paddleView.getX() - speed * deltaTime;
@@ -42,7 +42,7 @@ public class Paddle {
         paddleView.setX(newX);
     }
 
-    /** Di chuyển sang phải — có deltaTime để mượt hơn */
+    // Di chuyển sang phải — có deltaTime để mượt hơn
     public void moveRight(double deltaTime, double windowWidth) {
         double speed = 600; // pixel mỗi giây
         double newX = paddleView.getX() + speed * deltaTime;
