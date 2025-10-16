@@ -8,7 +8,6 @@ import javafx.scene.image.ImageView;
 import java.util.Random;
 
 public class BrickDisplay {
-    private Image backgroundImage;
     private Image[] brickImages;
     private final Random random = new Random();
     private Image paddleImage;
@@ -32,7 +31,6 @@ public class BrickDisplay {
     // Tạo toàn bộ màn hình với nền + gạch
     public Group getBrickDisplay() {
         Group group = new Group();
-        git add .
         // thêm gạch
         for (int row = 0; row < GameConfig.BRICK_ROWS; row++) {
             for (int col = 0; col < GameConfig.BRICK_COLS; col++) {
