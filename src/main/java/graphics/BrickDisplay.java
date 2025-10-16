@@ -32,7 +32,7 @@ public class BrickDisplay {
     // Tạo toàn bộ màn hình với nền + gạch
     public Group getBrickDisplay() {
         Group group = new Group();
-
+        git add .
         // thêm gạch
         for (int row = 0; row < GameConfig.BRICK_ROWS; row++) {
             for (int col = 0; col < GameConfig.BRICK_COLS; col++) {
