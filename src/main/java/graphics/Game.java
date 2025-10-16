@@ -17,14 +17,26 @@ public class Game {
     private boolean gameOver = false;
 
     public void show(Stage stage) {
+        //  Load background (đặt dưới cùng)
+        Image backgroundImage = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
+        ImageView backgroundView = new ImageView(backgroundImage);
+        backgroundView.setFitWidth(GameConfig.WINDOW_WIDTH);
+        backgroundView.setFitHeight(GameConfig.WINDOW_HEIGHT);
+
+        //  Tạo group chứa nền + gạch
         BrickDisplay brickDisplay = new BrickDisplay();
-        Group root = brickDisplay.getBrickDisplay();
+        Group brickGroup = brickDisplay.getBrickDisplay();
 
-        // Ảnh paddle và bóng
-        Image paddleImg = new Image(getClass().getClassLoader().getResourceAsStream("image/paddle.png"));
-        Image ballImg = new Image(getClass().getClassLoader().getResourceAsStream("image/ball.png"));
+        //  Group root chứa toàn bộ đối tượng trong game
+        Group root = new Group();
+        root.getChildren().add(backgroundView); // nền luôn nằm dưới cùng
+        root.getChildren().add(brickGroup);     // gạch chồng lên nền
 
-        // Tạo paddle và bóng
+        //  Ảnh paddle và bóng
+        Image paddleImg = new Image(getClass().getResource("/image/paddle.png").toExternalForm());
+        Image ballImg = new Image(getClass().getResource("/image/ball.png").toExternalForm());
+
+        //  Paddle
         Paddle paddle = new Paddle(
                 paddleImg,
                 GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0,
@@ -33,6 +45,7 @@ public class Game {
                 GameConfig.PADDLE_HEIGHT
         );
 
+        //  Ball
         Ball ball = new Ball(
                 ballImg,
                 GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0,
@@ -42,9 +55,10 @@ public class Game {
 
         root.getChildren().addAll(paddle.getPaddleView(), ball.getBallView());
 
+        //  Tạo Scene
         Scene scene = new Scene(root, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
-        // --- Sự kiện bàn phím ---
+        //  Sự kiện bàn phím
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.LEFT) leftPressed = true;
             if (e.getCode() == KeyCode.RIGHT) rightPressed = true;
@@ -55,16 +69,16 @@ public class Game {
             if (e.getCode() == KeyCode.RIGHT) rightPressed = false;
         });
 
-        // --- Focus để bắt phím ---
+        //  Focus để bắt phím
         scene.setOnMouseClicked(e -> root.requestFocus());
         stage.setTitle("Arkanoid - JavaFX");
         stage.setScene(scene);
         stage.show();
 
-        // Focus ban đầu
+        //  Focus ban đầu
         root.requestFocus();
 
-        // --- Game Loop ---
+        //  Game Loop
         new AnimationTimer() {
             private long lastTime = System.nanoTime();
 
@@ -73,40 +87,38 @@ public class Game {
                 if (gameOver) return;
 
                 double deltaTime = (now - lastTime) / 1e9;
-                if (deltaTime > 0.05) deltaTime = 0.05; // tránh khựng khi đổi frame
+                if (deltaTime > 0.05) deltaTime = 0.05; // tránh khựng frame
                 lastTime = now;
 
-                // --- Di chuyển paddle ---
+                //  Di chuyển paddle
                 if (leftPressed) paddle.moveLeft(deltaTime);
                 if (rightPressed) paddle.moveRight(deltaTime, GameConfig.WINDOW_WIDTH);
 
-                // --- Di chuyển bóng ---
+                //  Di chuyển bóng
                 ball.move();
 
-                // --- Va chạm tường ---
+                //  Va chạm tường
                 if (ball.getX() <= 0 || ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH)
                     ball.reverseX();
                 if (ball.getY() <= 0)
                     ball.reverseY();
 
-                // --- Va chạm paddle ---
+                //  Va chạm paddle
                 if (ball.getBallView().getBoundsInParent().intersects(paddle.getPaddleView().getBoundsInParent())) {
-                    // Chỉ phản xạ khi chạm mặt trên
                     if (ball.getY() + ball.getHeight() <= paddle.getY() + 10) {
                         ball.reverseY();
-                        // Đặt bóng ngay trên paddle
                         ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
                     }
                 }
 
-                // --- Va chạm đáy (thua game) ---
+                //  Va chạm đáy (Game Over)
                 if (ball.getY() > GameConfig.WINDOW_HEIGHT) {
                     gameOver = true;
                     System.out.println("Game Over!");
                 }
 
-                // --- Va chạm gạch ---
-                Iterator<javafx.scene.Node> it = root.getChildren().iterator();
+                // Va chạm gạch
+                Iterator<javafx.scene.Node> it = brickGroup.getChildren().iterator();
                 while (it.hasNext()) {
                     javafx.scene.Node node = it.next();
                     if (node instanceof ImageView brick &&

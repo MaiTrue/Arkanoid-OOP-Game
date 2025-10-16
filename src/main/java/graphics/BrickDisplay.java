@@ -16,18 +16,22 @@ public class BrickDisplay {
 
     public BrickDisplay() {
         // Đường dẫn ảnh tuyệt đối trong thư mục project
-        backgroundImage = new Image("file:src/image/background.jpg");
-        paddleImage = new Image("file:src/image/paddle.png");
-        ballImage = new Image("file:src/image/ball.png");
+        System.out.println("Background: " + getClass().getResource("/image/background.jpg"));
+        System.out.println("Current dir: " + System.getProperty("user.dir"));
+        System.out.println("ClassLoader: " + getClass().getClassLoader().getResource("image/background.jpg"));
+
+        backgroundImage = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
+        paddleImage = new Image(getClass().getResource("/image/paddle.png").toExternalForm());
+        ballImage = new Image(getClass().getResource("/image/ball.png").toExternalForm());
 
         brickImages = new Image[]{
-                new Image("file:src/image/blue.png"),
-                new Image("file:src/image/red.png"),
-                new Image("file:src/image/gold.png"),
-                new Image("file:src/image/green.png"),
-                new Image("file:src/image/pink.png"),
-                new Image("file:src/image/silver.png"),
-                new Image("file:src/image/cyan.png"),
+                new Image(getClass().getResource("/image/blue.png").toExternalForm()),
+                new Image(getClass().getResource("/image/red.png").toExternalForm()),
+                new Image(getClass().getResource("/image/gold.png").toExternalForm()),
+                new Image(getClass().getResource("/image/green.png").toExternalForm()),
+                new Image(getClass().getResource("/image/pink.png").toExternalForm()),
+                new Image(getClass().getResource("/image/silver.png").toExternalForm()),
+                new Image(getClass().getResource("/image/cyan.png").toExternalForm()),
         };
     }
 
@@ -40,6 +44,7 @@ public class BrickDisplay {
         backgroundView.setFitWidth(GameConfig.WINDOW_WIDTH);
         backgroundView.setFitHeight(GameConfig.WINDOW_HEIGHT);
         group.getChildren().add(backgroundView);
+        backgroundView.toBack();
 
         // 2️⃣ Sau đó thêm gạch
         for (int row = 0; row < GameConfig.BRICK_ROWS; row++) {
