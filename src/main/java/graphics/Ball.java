@@ -34,7 +34,6 @@ public class Ball {
     public void reverseX() {
         dx = -dx;
     }
-
     public void reverseY() {
         dy = -dy;
     }
