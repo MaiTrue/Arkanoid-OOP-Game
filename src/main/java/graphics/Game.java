@@ -25,6 +25,7 @@ public class Game {
 
         //  Tạo group chứa nền + gạch
         BrickDisplay brickDisplay = new BrickDisplay();
+        brickDisplay.setPattern(Patterns.LevelPatterns.getPattern(1));
         Group brickGroup = brickDisplay.getBrickDisplay();
 
         //  Group root chứa toàn bộ đối tượng trong game
@@ -34,7 +35,7 @@ public class Game {
 
         //  Ảnh paddle và bóng
         Image paddleImg = new Image(getClass().getResource("/image/paddle.png").toExternalForm());
-        Image ballImg = new Image(getClass().getResource("/image/ball.png").toExternalForm());
+        Image ballImg = new Image(getClass().getResource("/image/ball2.png").toExternalForm());
 
         //  Paddle
         Paddle paddle = new Paddle(
