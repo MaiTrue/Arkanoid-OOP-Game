@@ -10,6 +10,8 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import Patterns.PikachuPattern;
+
 
 public class GamePanel extends Pane {
     private final Canvas canvas;
@@ -32,6 +34,7 @@ public class GamePanel extends Pane {
         this.getChildren().add(canvas);
 
         brickDisplay = new BrickDisplay();
+        brickDisplay.setPattern(PikachuPattern.DATA);
         brickGroup = brickDisplay.getBrickDisplay();
         this.getChildren().add(brickGroup);
 

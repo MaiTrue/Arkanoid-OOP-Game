@@ -5,8 +5,8 @@ import javafx.scene.image.ImageView;
 
 public class Ball {
     private final ImageView ballView;
-    private double dx = 1;  // tốc độ ngang
-    private double dy = -1; // tốc độ dọc
+    private double dx = 3;  // tốc độ ngang
+    private double dy = -3; // tốc độ dọc
 
     private final double startX;
     private final double startY;
@@ -34,7 +34,6 @@ public class Ball {
     public void reverseX() {
         dx = -dx;
     }
-
     public void reverseY() {
         dy = -dy;
     }
