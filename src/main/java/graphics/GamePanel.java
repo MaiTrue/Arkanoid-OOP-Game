@@ -166,7 +166,5 @@ public class GamePanel extends Pane {
         // Tạo lại gạch mới
         brickGroup = brickDisplay.resetBricks();
         this.getChildren().add(0, brickGroup);
-
-
     }
 }
