@@ -39,7 +39,7 @@ public class GamePanel extends Pane {
     private Button restartButton;
     private Button returnButton;
     private javafx.scene.shape.Rectangle overlay;
-
+    private boolean ballMoving = false; // lúc đầu bóng chưa chạy
 
     public GamePanel() {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
@@ -148,6 +148,7 @@ public class GamePanel extends Pane {
             switch (e.getCode()) {
                 case LEFT -> leftPressed = true;
                 case RIGHT -> rightPressed = true;
+                case SPACE -> ballMoving = true;
             }
         });
         this.setOnKeyReleased(e -> {
@@ -186,54 +187,58 @@ public class GamePanel extends Pane {
         if (leftPressed) paddle.moveLeft(deltaTime);
         if (rightPressed) paddle.moveRight(deltaTime, GameConfig.WINDOW_WIDTH);
 
-        ball.move();
+        if (ballMoving) {
+            ball.move();
 
-        // Va chạm biên
-        if (ball.getX() <= 0 || ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH)
-            ball.reverseX();
-        if (ball.getY() <= 0)
-            ball.reverseY();
+            // Va chạm biên
+            if (ball.getX() <= 0 || ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH)
+                ball.reverseX();
+            if (ball.getY() <= 50)
+                ball.reverseY();
 
-        // Va chạm paddle
-        if (ball.hitPaddle(paddle)) {
-            ball.reverseY();
-            ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
-        }
+            // Va chạm paddle
+            if (ball.hitPaddle(paddle)) {
+                ball.reverseY();
+                ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
+            }
 
-        // Va chạm gạch
-        Iterator<javafx.scene.Node> it = brickGroup.getChildren().iterator();
-        while (it.hasNext()) {
-            javafx.scene.Node node = it.next();
-            if (node instanceof ImageView brick) {
-                Bounds brickBounds = brick.getBoundsInParent();
-                if (ball.getBallView().getBoundsInParent().intersects(brickBounds)) {
-                    it.remove();
-                    ball.reverseY();
-                    score += 10;
-                    scoreText.setText("Point: " + score);
+            // Va chạm gạch
+            Iterator<javafx.scene.Node> it = brickGroup.getChildren().iterator();
+            while (it.hasNext()) {
+                javafx.scene.Node node = it.next();
+                if (node instanceof ImageView brick) {
+                    Bounds brickBounds = brick.getBoundsInParent();
+                    if (ball.getBallView().getBoundsInParent().intersects(brickBounds)) {
+                        it.remove();
+                        ball.reverseY();
+                        score += 10;
+                        scoreText.setText("Point: " + score);
 
-                    if (brickGroup.getChildren().isEmpty()) {
-                        gameOver = true;
-                        showGameOver();
+                        if (brickGroup.getChildren().isEmpty()) {
+                            gameOver = true;
+                            showGameOver();
+                        }
+                        break;
                     }
-                    break;
                 }
             }
-        }
 
-        // Bóng rơi -> mất mạng
-        if (ball.getY() > GameConfig.WINDOW_HEIGHT) {
-            lives--;
-            this.getChildren().remove(hearts[lives]);
+            // Bóng rơi -> mất mạng
+            if (ball.getY() > GameConfig.WINDOW_HEIGHT) {
+                lives--;
+                this.getChildren().remove(hearts[lives]);
 
-            if (lives <= 0) {
-                gameOver = true;
-                showGameOver();
-            } else {
-                ball.getBallView().setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0);
-                ball.getBallView().setY(GameConfig.WINDOW_HEIGHT - 100);
-                ball.reverseY();
+                if (lives <= 0) {
+                    gameOver = true;
+                    showGameOver();
+                } else {
+                    ball.resetPosition();
+                    ballMoving = false;
+                }
             }
+        } else {
+            ball.getBallView().setX(paddle.getX() + paddle.getWidth()/2 - ball.getWidth()/2);
+            ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
         }
     }
 
@@ -275,9 +280,11 @@ public class GamePanel extends Pane {
         }
 
         // Reset bóng & paddle
-        ball.getBallView().setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0);
-        ball.getBallView().setY(GameConfig.WINDOW_HEIGHT - 100);
+        ball.resetPosition();
         paddle.getPaddleView().setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0);
+
+        // ấn space thì bóng mới chạy
+        ballMoving = false;
 
         // Reset gạch
         this.getChildren().remove(brickGroup);

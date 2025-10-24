@@ -54,8 +54,8 @@ public class Ball {
     public void resetPosition() {
         ballView.setX(startX);
         ballView.setY(startY);
-        dx = 3;
-        dy = -3;
+        dx = 2;
+        dy = -2;
     }
 
     public double getX() {
