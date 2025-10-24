@@ -30,7 +30,7 @@ public class Menu {
         VBox menuBox = createMenuVBox();
 
         Label title = createTitle("ARKANOID");
-        Label newGame = createMenuItem("NEW GAME", () -> new Game().show(stage));
+        Label newGame = createMenuItem("NEW GAME", () -> new GamePanel().show(stage));
         Label levels  = createMenuItem("LEVELS", () -> showLevels(stage));
         Label exit    = createMenuItem("EXIT", stage::close);
 
@@ -49,9 +49,9 @@ public class Menu {
         VBox levelBox = createMenuVBox();
 
         Label title = createTitle("SELECT LEVEL");
-        Label level1 = createMenuItem("LEVEL 1", () -> new Game().show(stage));
-        Label level2 = createMenuItem("LEVEL 2", () -> new Game().show(stage));
-        Label level3 = createMenuItem("LEVEL 3", () -> new Game().show(stage));
+        Label level1 = createMenuItem("LEVEL 1", () -> new GamePanel().show(stage));
+        Label level2 = createMenuItem("LEVEL 2", () -> new GamePanel().show(stage));
+        Label level3 = createMenuItem("LEVEL 3", () -> new GamePanel().show(stage));
         Label back   = createMenuItem("BACK", () -> show(stage));
 
         levelBox.getChildren().addAll(title, level1, level2, level3, back);
