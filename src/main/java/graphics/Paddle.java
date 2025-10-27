@@ -1,53 +1,71 @@
 package graphics;
 
+import base.MovableObject;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Paddle {
+/**
+ * Paddle kế thừa MovableObject nhưng dùng ImageView để hiển thị.
+ * Giữ nguyên hành vi cũ: moveLeft(moveRight) dùng deltaTime.
+ */
+public class Paddle extends MovableObject {
     private final ImageView paddleView;
+    private double speed = 600; // pixel mỗi giây
 
     public Paddle(Image image, double x, double y, double width, double height) {
+        super(x, y, width, height);
         paddleView = new ImageView(image);
         paddleView.setX(x);
         paddleView.setY(y);
         paddleView.setFitWidth(width);
         paddleView.setFitHeight(height);
+
+        // đồng bộ fields
+        this.x = x; this.y = y; this.width = width; this.height = height;
     }
 
     public ImageView getPaddleView() {
         return paddleView;
     }
 
-    public double getX() {
-        return paddleView.getX();
-    }
+    @Override
+    public double getX() { return paddleView.getX(); }
 
-    public double getY() {
-        return paddleView.getY();
-    }
+    @Override
+    public double getY() { return paddleView.getY(); }
 
-    public double getWidth() {
-        return paddleView.getFitWidth();
-    }
+    @Override
+    public double getWidth() { return paddleView.getFitWidth(); }
 
-    public double getHeight() {
-        return paddleView.getFitHeight();
-    }
+    @Override
+    public double getHeight() { return paddleView.getFitHeight(); }
 
     // Di chuyển sang trái — có deltaTime để mượt hơn
     public void moveLeft(double deltaTime) {
-        double speed = 600; // pixel mỗi giây
-        double newX = paddleView.getX() - speed * deltaTime;
+        dx = -speed;
+        double newX = paddleView.getX() + dx * deltaTime;
         if (newX < 0) newX = 0;
         paddleView.setX(newX);
+        this.x = newX;
     }
 
     // Di chuyển sang phải — có deltaTime để mượt hơn
     public void moveRight(double deltaTime, double windowWidth) {
-        double speed = 600; // pixel mỗi giây
-        double newX = paddleView.getX() + speed * deltaTime;
+        dx = speed;
+        double newX = paddleView.getX() + dx * deltaTime;
         if (newX + paddleView.getFitWidth() > windowWidth)
             newX = windowWidth - paddleView.getFitWidth();
         paddleView.setX(newX);
+        this.x = newX;
+    }
+
+    @Override
+    public void update(double deltaTime) {
+        // Ở thiết kế hiện tại GamePanel gọi moveLeft/moveRight trực tiếp.
+    }
+
+    @Override
+    public void render(javafx.scene.canvas.GraphicsContext gc) {
+        // Không dùng, vì dùng ImageView
     }
 }

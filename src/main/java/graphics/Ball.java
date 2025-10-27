@@ -1,17 +1,23 @@
 package graphics;
 
+import base.MovableObject;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class Ball {
+/**
+ * Ball kế thừa MovableObject, hiển thị bằng ImageView.
+ * Giữ nguyên logic di chuyển/fizx collisions như cậu có.
+ */
+public class Ball extends MovableObject {
     private final ImageView ballView;
-    private double dx = 2;  // tốc độ ngang
+    private double dx = 2;  // tốc độ ngang (pixel per frame như code gốc)
     private double dy = -2; // tốc độ dọc
 
     private final double startX;
     private final double startY;
 
     public Ball(Image ballImage, double startX, double startY, double size) {
+        super(startX, startY, size, size);
         ballView = new ImageView(ballImage);
         ballView.setFitWidth(size);
         ballView.setFitHeight(size);
@@ -20,6 +26,8 @@ public class Ball {
 
         this.startX = startX;
         this.startY = startY;
+
+        this.x = startX; this.y = startY; this.width = size; this.height = size;
     }
 
     public ImageView getBallView() {
@@ -29,17 +37,13 @@ public class Ball {
     public void move() {
         ballView.setX(ballView.getX() + dx);
         ballView.setY(ballView.getY() + dy);
+        this.x = ballView.getX();
+        this.y = ballView.getY();
     }
 
-    public void reverseX() {
-        dx = -dx;
-    }
+    public void reverseX() { dx = -dx; }
+    public void reverseY() { dy = -dy; }
 
-    public void reverseY() {
-        dy = -dy;
-    }
-
-    // Khi bóng chạm vào paddle chỉ nảy nếu va vào mặt trên
     public boolean hitPaddle(Paddle paddle) {
         double ballBottom = getY() + getHeight();
         double paddleTop = paddle.getY();
@@ -56,21 +60,21 @@ public class Ball {
         ballView.setY(startY);
         dx = 2;
         dy = -2;
+        this.x = startX; this.y = startY;
     }
 
-    public double getX() {
-        return ballView.getX();
+    @Override
+    public void update(double deltaTime) {
+        // giữ trống — GamePanel gọi move() trực tiếp.
     }
 
-    public double getY() {
-        return ballView.getY();
+    @Override
+    public void render(javafx.scene.canvas.GraphicsContext gc) {
+        // not used (using ImageView)
     }
 
-    public double getWidth() {
-        return ballView.getFitWidth();
-    }
-
-    public double getHeight() {
-        return ballView.getFitHeight();
-    }
+    public double getX() { return ballView.getX(); }
+    public double getY() { return ballView.getY(); }
+    public double getWidth() { return ballView.getFitWidth(); }
+    public double getHeight() { return ballView.getFitHeight(); }
 }

@@ -54,7 +54,6 @@ public class BrickDisplay {
                 double x = offsetX + col * (GameConfig.BRICK_WIDTH + GameConfig.BRICK_MARGIN);
                 double y = offsetY + row * (GameConfig.BRICK_HEIGHT + GameConfig.BRICK_MARGIN);
 
-
                 brickView.setX(x);
                 brickView.setY(y);
                 brickView.setFitWidth(GameConfig.BRICK_WIDTH);
