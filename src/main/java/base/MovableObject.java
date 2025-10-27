@@ -6,7 +6,7 @@ package base;
 public abstract class MovableObject extends GameObject {
     protected double dx = 0;
     protected double dy = 0;
-git
+
     public MovableObject(double x, double y, double width, double height) {
         super(x, y, width, height);
     }

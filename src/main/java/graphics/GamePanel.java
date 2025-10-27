@@ -17,6 +17,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import graphics.SoundManager;
 import Patterns.PikachuPattern;
 
 import java.util.Iterator;
@@ -39,7 +40,8 @@ public class GamePanel extends Pane {
     private Button restartButton;
     private Button returnButton;
     private javafx.scene.shape.Rectangle overlay;
-    private boolean ballMoving = false; // lúc đầu bóng chưa chạy
+    private boolean ballMoving = false;// lúc đầu bóng chưa chạy
+    private SoundManager soundManager;
 
     public GamePanel() {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
@@ -62,6 +64,10 @@ public class GamePanel extends Pane {
         overlay.setFill(Color.rgb(0, 0, 0, 0.6));
         overlay.setVisible(false);
         this.getChildren().add(overlay);
+
+        // Âm thanh
+        soundManager = new SoundManager();
+        soundManager.playBackgroundMusic();
 
         // BrickDisplay + GameManager
         BrickDisplay brickDisplay = new BrickDisplay();
@@ -180,21 +186,28 @@ public class GamePanel extends Pane {
             ball.move();
 
             // Va chạm biên
-            if (ball.getX() <= 0 || ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH)
+            if (ball.getX() <= 0 || ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH) {
                 ball.reverseX();
-            if (ball.getY() <= 50)
+                soundManager.playCollisionSound();
+            }
+
+            if (ball.getY() <= 50) {
                 ball.reverseY();
+                soundManager.playCollisionSound();
+            }
 
             // Va chạm paddle
             if (ball.hitPaddle(paddle)) {
                 ball.reverseY();
                 ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
+                soundManager.playCollisionSound();
             }
 
             // Va chạm gạch xài GameManager.handleCollisions
             manager.handleCollisions(() -> {
                 // onBrickDestroyed: update điểm text
                 scoreText.setText("Point: " + manager.getScore());
+                soundManager.playBrickHitSound();
             }, () -> {
                 // onAllBricksDestroyed: game over win
                 gameOver = true;
@@ -203,6 +216,8 @@ public class GamePanel extends Pane {
 
             // Bóng rơi -> mất mạng
             if (ball.getY() > GameConfig.WINDOW_HEIGHT) {
+                soundManager.playDieSound();
+
                 // xóa trái tim tương ứng
                 int livesLeft = manager.getLives();
                 manager.ballDropped(() -> {
