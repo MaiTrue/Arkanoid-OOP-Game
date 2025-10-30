@@ -49,8 +49,8 @@ public class Menu {
         VBox levelBox = createMenuVBox();
 
         Label title = createTitle("SELECT LEVEL");
-        Label level1 = createMenuItem("LEVEL 1", () -> new GamePanel().show(stage));
-        Label level2 = createMenuItem("LEVEL 2", () -> new GamePanel().show(stage));
+        Label level1 = createMenuItem("LEVEL 1", () -> new Level1Panel().show(stage));
+        Label level2 = createMenuItem("LEVEL 2", () -> new Level2Panel().show(stage));
         Label level3 = createMenuItem("LEVEL 3", () -> new GamePanel().show(stage));
         Label back   = createMenuItem("BACK", () -> show(stage));
 
