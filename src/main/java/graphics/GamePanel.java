@@ -41,9 +41,9 @@ public class GamePanel extends Pane {
     private Line divider;
     private Button restartButton;
     private Button returnButton;
-    private javafx.scene.shape.Rectangle overlay;
     private boolean ballMoving = false; // lúc đầu bóng chưa chạy
     private SoundManager soundManager;
+    private ImageView backgroundEndView;
 
     /**
      * Constructor chính: cho phép truyền pattern cho BrickDisplay.
@@ -65,11 +65,11 @@ public class GamePanel extends Pane {
         gc = canvas.getGraphicsContext2D();
         this.getChildren().add(canvas);
 
-        // Overlay mờ khi Game Over
-        overlay = new javafx.scene.shape.Rectangle(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-        overlay.setFill(Color.rgb(0, 0, 0, 0.6));
-        overlay.setVisible(false);
-        this.getChildren().add(overlay);
+        // back kết thúc
+        Image backgroundEnd = new Image(getClass().getResource("/image/background_end.jpg").toExternalForm());
+        backgroundEndView = new ImageView(backgroundEnd);
+        backgroundEndView.setFitWidth(GameConfig.WINDOW_WIDTH);
+        backgroundEndView.setFitHeight(GameConfig.WINDOW_HEIGHT);
 
         // Âm thanh
         soundManager = new SoundManager();
@@ -134,14 +134,14 @@ public class GamePanel extends Pane {
         restartButton = new Button("Restart");
         restartButton.setFont(new Font("Arial", 18));
         restartButton.setLayoutX(GameConfig.WINDOW_WIDTH / 2.0 - 120);
-        restartButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 40);
+        restartButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 170);
         restartButton.setVisible(false);
         restartButton.setOnAction(e -> restartGame());
 
         returnButton = new Button("Return to Menu");
         returnButton.setFont(new Font("Arial", 18));
         returnButton.setLayoutX(GameConfig.WINDOW_WIDTH / 2.0 - 10);
-        returnButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 40);
+        returnButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 170);
         returnButton.setVisible(false);
         returnButton.setOnAction(e -> Menu.show((Stage) this.getScene().getWindow()));
 
@@ -287,15 +287,24 @@ public class GamePanel extends Pane {
     }
 
     private void showGameOver() {
-        overlay.setVisible(true);
+        this.getChildren().removeIf(node ->
+                node != canvas && node != restartButton && node != returnButton && node != scoreText
+        );
+        // Clear tất cả PowerUps
+        manager.getFallingPowerUps().clear();
+
+
+        if (!this.getChildren().contains(backgroundEndView)) {
+            this.getChildren().add(0, backgroundEndView); // đặt ở dưới cùng
+        }
 
         gc.setFill(Color.RED);
         gc.setFont(new Font("Arial", 48));
-        gc.fillText("GAME OVER", GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 40);
+        gc.fillText("GAME OVER", GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
 
         gc.setFill(Color.WHITE);
         gc.setFont(new Font("Arial", 28));
-        gc.fillText("Your score: " + manager.getScore(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0);
+        gc.fillText("Your score: " + manager.getScore(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 150);
 
         restartButton.setVisible(true);
         returnButton.setVisible(true);
