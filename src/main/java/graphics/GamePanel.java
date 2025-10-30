@@ -1,6 +1,7 @@
 package graphics;
 
 import constants.GameConfig;
+import javafx.util.Duration;
 import core.GameManager;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Bounds;
@@ -24,6 +25,7 @@ import java.util.Iterator;
 
 /**
  * GamePanel: UI layer. Giữ nguyên logic gốc, bây giờ dùng GameManager để lưu trạng thái.
+ * SỬA: bổ sung constructor nhận pattern để các LevelPanel truyền pattern khác nhau.
  */
 public class GamePanel extends Pane {
     private final Canvas canvas;
@@ -40,10 +42,14 @@ public class GamePanel extends Pane {
     private Button restartButton;
     private Button returnButton;
     private javafx.scene.shape.Rectangle overlay;
-    private boolean ballMoving = false;// lúc đầu bóng chưa chạy
+    private boolean ballMoving = false; // lúc đầu bóng chưa chạy
     private SoundManager soundManager;
 
-    public GamePanel() {
+    /**
+     * Constructor chính: cho phép truyền pattern cho BrickDisplay.
+     * Subclasses (Level panels) nên gọi super(pattern).
+     */
+    public GamePanel(int[][] pattern) {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
         // Ảnh nền
@@ -69,9 +75,9 @@ public class GamePanel extends Pane {
         soundManager = new SoundManager();
         soundManager.playBackgroundMusic();
 
-        // BrickDisplay + GameManager
+        // BrickDisplay + GameManager (dùng pattern được truyền vào)
         BrickDisplay brickDisplay = new BrickDisplay();
-        brickDisplay.setPattern(PikachuPattern.DATA);
+        brickDisplay.setPattern(pattern);
         manager = new GameManager(brickDisplay);
 
         brickGroup = manager.getBrickGroup();
@@ -115,6 +121,13 @@ public class GamePanel extends Pane {
         this.requestFocus();
 
         startGameLoop();
+    }
+
+    /**
+     * Constructor mặc định giữ tương thích trước đây: vẫn load Pikachu nếu không truyền pattern.
+     */
+    public GamePanel() {
+        this(PikachuPattern.DATA);
     }
 
     private void setupButtons() {
@@ -238,9 +251,39 @@ public class GamePanel extends Pane {
                 }
             }
         } else {
-            ball.getBallView().setX(paddle.getX() + paddle.getWidth()/2 - ball.getWidth()/2);
+            ball.getBallView().setX(paddle.getX() + paddle.getWidth() / 2 - ball.getWidth() / 2);
             ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
         }
+        // --- Cập nhật PowerUps ---
+        Iterator<PowerUp> iterator = manager.getFallingPowerUps().iterator();
+        while (iterator.hasNext()) {
+            PowerUp p = iterator.next();
+
+            // Nếu chưa add vào Scene thì add
+            if (!this.getChildren().contains(p.getImageView())) {
+                this.getChildren().add(p.getImageView());
+            }
+
+            // Cập nhật vị trí rơi
+            p.update(deltaTime);
+
+            // Nếu chạm paddle
+            Bounds powerBounds = p.getImageView().getBoundsInParent();
+            Bounds paddleBounds = manager.getPaddle().getPaddleView().getBoundsInParent();
+            if (powerBounds.intersects(paddleBounds)) {
+                manager.applyPowerUp(p);
+                this.getChildren().remove(p.getImageView());
+                iterator.remove();
+                continue;
+            }
+
+            // Nếu rơi khỏi màn hình
+            if (p.getY() > GameConfig.WINDOW_HEIGHT) {
+                this.getChildren().remove(p.getImageView());
+                iterator.remove();
+            }
+        }
+
     }
 
     private void showGameOver() {
@@ -295,5 +338,9 @@ public class GamePanel extends Pane {
         stage.show();
 
         this.requestFocus();
+    }
+
+    public GameManager getManager() {
+        return manager;
     }
 }

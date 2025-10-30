@@ -6,8 +6,8 @@ public class GameConfig {
 
     public static final int BRICK_ROWS = 9;
     public static final int BRICK_COLS = 12;
-    public static final int BRICK_WIDTH = 20;
-    public static final int BRICK_HEIGHT = 20;
+    public static final int BRICK_WIDTH = 15;
+    public static final int BRICK_HEIGHT = 15;
     public static final double BRICK_MARGIN = 0.8;
 
     public static final double PADDLE_WIDTH = 150;

@@ -16,7 +16,7 @@ public class BrickDisplay {
     private Image ballImage;
 
     public BrickDisplay() {
-        paddleImage = new Image(getClass().getResource("/image/paddle.png").toExternalForm());
+        paddleImage = new Image(getClass().getResource("/image/paddle2.png").toExternalForm());
         ballImage = new Image(getClass().getResource("/image/ball2.png").toExternalForm());
 
         brickImages = new Image[]{

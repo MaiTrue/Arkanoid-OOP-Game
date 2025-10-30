@@ -4,6 +4,9 @@ import base.MovableObject;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import javafx.geometry.Rectangle2D;
+
+
 /**
  * Paddle kế thừa MovableObject nhưng dùng ImageView để hiển thị.
  * Giữ nguyên hành vi cũ: moveLeft(moveRight) dùng deltaTime.
@@ -11,9 +14,31 @@ import javafx.scene.image.ImageView;
 public class Paddle extends MovableObject {
     private final ImageView paddleView;
     private double speed = 600; // pixel mỗi giây
+    private final double originalWidth;
+
+    public Paddle(double x, double y, double width, double height) {
+        super(x, y, width, height);
+        originalWidth = width;
+        Image image = new Image(getClass().getResource("/image/paddle2.png").toExternalForm());
+        paddleView = new ImageView(image);
+        paddleView.setX(x);
+        paddleView.setY(y);
+        paddleView.setFitWidth(width);
+        paddleView.setFitHeight(height);
+    }
+    public void setPaddleWidth(double newWidth) {
+        paddleView.setFitWidth(newWidth);
+        this.width = newWidth; // đồng bộ lại field width trong MovableObject
+    }
+
+
+    public double getOriginalWidth() {
+        return originalWidth;
+    }
 
     public Paddle(Image image, double x, double y, double width, double height) {
         super(x, y, width, height);
+        originalWidth = width;
         paddleView = new ImageView(image);
         paddleView.setX(x);
         paddleView.setY(y);
@@ -67,5 +92,9 @@ public class Paddle extends MovableObject {
     @Override
     public void render(javafx.scene.canvas.GraphicsContext gc) {
         // Không dùng, vì dùng ImageView
+    }
+
+    public Rectangle2D getBounds() {
+        return new Rectangle2D(x, y, width, height);
     }
 }
