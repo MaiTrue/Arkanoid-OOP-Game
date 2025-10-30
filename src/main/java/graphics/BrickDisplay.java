@@ -23,7 +23,8 @@ public class BrickDisplay {
                 new Image(getClass().getResource("/image/yellow.png").toExternalForm()), // 1 = vàng
                 new Image(getClass().getResource("/image/red1.png").toExternalForm()),   // 2 = đỏ
                 new Image(getClass().getResource("/image/black.jpg").toExternalForm()),  // 3 = đen
-                new Image(getClass().getResource("/image/white1.jpg").toExternalForm())   // 4 = trắng
+                new Image(getClass().getResource("/image/white1.jpg").toExternalForm()),// 4 = trắng
+                new Image(getClass().getResource("/image/orange2.png").toExternalForm())  // 5 = cam
         };
     }
     public void setPattern(int[][] pattern) {
