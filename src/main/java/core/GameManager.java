@@ -53,24 +53,12 @@ public class GameManager {
     }
 
 
-    public GameManager(BrickDisplay brickDisplay) {
+    public GameManager(BrickDisplay brickDisplay, Paddle paddle, Ball ball) {
         this.brickDisplay = brickDisplay;
+
+        this.paddle = paddle;
+        this.ball = ball;
         brickGroup = brickDisplay.getBrickDisplay();
-
-        paddle = new Paddle(
-                brickDisplay.getPaddleImage(),
-                GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0,
-                GameConfig.WINDOW_HEIGHT - 60,
-                GameConfig.PADDLE_WIDTH,
-                GameConfig.PADDLE_HEIGHT
-        );
-
-        ball = new Ball(
-                brickDisplay.getBallImage(),
-                GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0,
-                GameConfig.WINDOW_HEIGHT - 100,
-                GameConfig.BALL_SIZE
-        );
     }
 
     // Trả về thành phần để GamePanel add vào scene

@@ -79,15 +79,28 @@ public class GamePanel extends Pane {
         // BrickDisplay + GameManager (dùng pattern được truyền vào)
         BrickDisplay brickDisplay = new BrickDisplay();
         brickDisplay.setPattern(pattern);
-        manager = new GameManager(brickDisplay);
+
+        Paddle paddle = new Paddle(
+                brickDisplay.getPaddleImage(),
+                GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0,
+                GameConfig.WINDOW_HEIGHT - 60,
+                GameConfig.PADDLE_WIDTH,
+                GameConfig.PADDLE_HEIGHT
+        );
+
+        Ball ball = new Ball(
+                brickDisplay.getBallImage(),
+                GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0,
+                GameConfig.WINDOW_HEIGHT - 100,
+                GameConfig.BALL_SIZE
+        );
+
+        manager = new GameManager(brickDisplay, paddle, ball);
 
         brickGroup = manager.getBrickGroup();
         this.getChildren().add(brickGroup);
 
         // Paddle và Ball lấy từ manager
-        Paddle paddle = manager.getPaddle();
-        Ball ball = manager.getBall();
-
         this.getChildren().addAll(paddle.getPaddleView(), ball.getBallView());
 
         // Hiển thị trái tim (mạng)
