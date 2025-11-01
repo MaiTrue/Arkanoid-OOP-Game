@@ -1,6 +1,7 @@
 package graphics;
 
 import javafx.scene.image.Image;
+import core.GameManager;
 
 public class ExpandPaddlePowerUp extends PowerUp {
 
@@ -11,15 +12,17 @@ public class ExpandPaddlePowerUp extends PowerUp {
     }
 
     @Override
-    public void applyEffect(Paddle paddle) {
-        // Reset lại kích thước gốc trước khi phóng to
-        paddle.getPaddleView().setFitWidth(paddle.getOriginalWidth() * 1.5);
+    public void applyEffect(GameManager manager) {
+        // Lấy paddle từ manager
+        Paddle paddle = manager.getPaddle();
+        paddle.setPaddleWidth(paddle.getOriginalWidth() * 1.5);
     }
 
     @Override
-    public void removeEffect(Paddle paddle) {
-        // Trả lại kích thước ban đầu
-        paddle.getPaddleView().setFitWidth(paddle.getOriginalWidth());
+    public void removeEffect(GameManager manager) {
+        // Lấy paddle từ manager
+        Paddle paddle = manager.getPaddle();
+        paddle.setPaddleWidth(paddle.getOriginalWidth());
     }
 
     @Override

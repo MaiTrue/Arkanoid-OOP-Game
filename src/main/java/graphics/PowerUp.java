@@ -1,6 +1,7 @@
 package graphics;
 
 import base.GameObject;
+import core.GameManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.ImageView;
@@ -26,8 +27,8 @@ public abstract class PowerUp extends GameObject {
         imageView.setY(y);
     }
 
-    public abstract void applyEffect(Paddle paddle);
-    public abstract void removeEffect(Paddle paddle);
+    public abstract void applyEffect(GameManager manager);
+    public abstract void removeEffect(GameManager manager);
 
     @Override
     public void update(double deltaTime) {

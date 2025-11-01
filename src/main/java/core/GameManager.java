@@ -22,6 +22,7 @@ public class GameManager {
     private int lives = 3;
     private final List<PowerUp> fallingPowerUps = new ArrayList<>();
     private final java.util.Random random = new java.util.Random();
+    private int bricksBrokenSinceLastDrop = 0;
 
     public List<PowerUp> getFallingPowerUps() {
         return fallingPowerUps;
@@ -30,21 +31,19 @@ public class GameManager {
     private final java.util.Map<String, javafx.animation.PauseTransition> activeEffects = new java.util.HashMap<>();
 
     public void applyPowerUp(PowerUp p) {
-        Paddle paddle = getPaddle();
-
         // Nếu loại này đang có hiệu ứng — reset lại timer
         if (activeEffects.containsKey(p.getType())) {
             activeEffects.get(p.getType()).stop();
         }
 
         // Áp dụng hiệu ứng
-        p.applyEffect(paddle);
+        p.applyEffect(this);
 
         // Tạo timer để remove sau duration
         javafx.animation.PauseTransition timer =
                 new javafx.animation.PauseTransition(javafx.util.Duration.seconds(p.getDuration()));
         timer.setOnFinished(e -> {
-            p.removeEffect(paddle);
+            p.removeEffect(this);
             activeEffects.remove(p.getType());
         });
         timer.play();
@@ -104,8 +103,9 @@ public class GameManager {
                     it.remove();
                     ball.reverseY();
                     score += 10;
+                    bricksBrokenSinceLastDrop++;
 
-                    if (random.nextDouble() < 0.25) {
+                    if (bricksBrokenSinceLastDrop > 15 && random.nextDouble() < 0.07) {
                         double bx = brick.getX();
                         double by = brick.getY();
                         PowerUp powerUp;
@@ -114,10 +114,11 @@ public class GameManager {
                         if (random.nextBoolean()) {
                             powerUp = new ExpandPaddlePowerUp(bx, by); // có hiệu ứng phóng to paddle
                         } else {
-                            powerUp = new FallingEffect(bx, by);
+                            powerUp = new FastBallPowerUp(bx, by);
                         }
 
                         fallingPowerUps.add(powerUp);
+                        bricksBrokenSinceLastDrop = 0;
                     }
 
 
@@ -150,7 +151,7 @@ public class GameManager {
         ball.resetPosition();
         paddle.getPaddleView().setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0);
         fallingPowerUps.clear();
-
+        bricksBrokenSinceLastDrop = 0;
     }
     public BrickDisplay getBrickDisplay() {
         return brickDisplay;
