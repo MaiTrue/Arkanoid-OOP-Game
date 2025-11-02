@@ -16,12 +16,14 @@ public class BrickDisplay {
     private Image ballImage;
     private Image expandPowerUpImage;
     private Image fastBallPowerUpImage;
+    private Image reverseControlsPowerUpImage;
 
     public BrickDisplay() {
         paddleImage = new Image(getClass().getResource("/image/paddle2.png").toExternalForm());
         ballImage = new Image(getClass().getResource("/image/ball2.png").toExternalForm());
         expandPowerUpImage = new Image(getClass().getResource("/image/effect2.png").toExternalForm());
         fastBallPowerUpImage = new Image(getClass().getResource("/image/fast_ball.png").toExternalForm());
+        reverseControlsPowerUpImage = new Image(getClass().getResource("/image/ReverseControlsPowerUp.png").toExternalForm());
 
         brickImages = new Image[]{
                 new Image(getClass().getResource("/image/yellow.png").toExternalForm()), // 1 = vàng
@@ -83,4 +85,8 @@ public class BrickDisplay {
     public Image getExpandPowerUpImage() { return expandPowerUpImage; }
 
     public Image getFastBallPowerUpImage() { return fastBallPowerUpImage; }
+
+    public Image getReverseControlsPowerUpImage() {
+        return reverseControlsPowerUpImage;
+    }
 }

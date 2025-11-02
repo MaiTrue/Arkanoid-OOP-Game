@@ -5,15 +5,21 @@ import graphics.*;
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
+import java.util.Map;
+import java.util.HashMap;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 /**
  * GameManager: quản lý paddle, ball, bricks, score, lives, powerups.
  * GamePanel sẽ tạo GameManager và gọi update/check logic.
  */
-  public class GameManager {
+public class GameManager {
     private final Paddle paddle;
     private final Ball ball;
     private Group brickGroup; // Group of ImageView bricks
@@ -21,14 +27,17 @@ import java.util.List;
     private int score = 0;
     private int lives = 3;
     private final List<PowerUp> fallingPowerUps = new ArrayList<>();
-    private final java.util.Random random = new java.util.Random();
+    private final Random random = new Random();
     private int bricksBrokenSinceLastDrop = 0;
+
+    // ✨ Thêm trạng thái điều khiển ngược
+    private boolean controlsReversed = false;
 
     public List<PowerUp> getFallingPowerUps() {
         return fallingPowerUps;
     }
 
-    private final java.util.Map<String, javafx.animation.PauseTransition> activeEffects = new java.util.HashMap<>();
+    private final Map<String, PauseTransition> activeEffects = new HashMap<>();
 
     public void applyPowerUp(PowerUp p) {
         // Nếu loại này đang có hiệu ứng — reset lại timer
@@ -40,8 +49,8 @@ import java.util.List;
         p.applyEffect(this);
 
         // Tạo timer để remove sau duration
-        javafx.animation.PauseTransition timer =
-                new javafx.animation.PauseTransition(javafx.util.Duration.seconds(p.getDuration()));
+        PauseTransition timer =
+                new PauseTransition(Duration.seconds(p.getDuration()));
         timer.setOnFinished(e -> {
             p.removeEffect(this);
             activeEffects.remove(p.getType());
@@ -55,8 +64,8 @@ import java.util.List;
 
     public GameManager(BrickDisplay brickDisplay, Paddle paddle, Ball ball) {
         this.brickDisplay = brickDisplay;
-
         this.paddle = paddle;
+        this.paddle.setGameManager(this);
         this.ball = ball;
         brickGroup = brickDisplay.getBrickDisplay();
     }
@@ -71,12 +80,19 @@ import java.util.List;
 
     public void setBrickGroup(Group g) { brickGroup = g; }
 
+    // ✨ Setter cho trạng thái điều khiển ngược
+    public void setControlsReversed(boolean reversed) {
+        this.controlsReversed = reversed;
+    }
+
+    // ✨ Getter cho trạng thái điều khiển ngược (cần thiết cho Paddle hoặc GamePanel)
+    public boolean isControlsReversed() {
+        return controlsReversed;
+    }
+
     // Cập nhật logic va chạm giữa ball và bricks/paddle, tính điểm, mạng
-    // Tương thích với GamePanel trước đó — deltatime giữ để tương thích nếu cần
     public void update(double deltaTime) {
-        // collision logic handled by GamePanel previously; keep minimal here
-        // The GamePanel handles movement inputs and calls ball.move()
-        // This class can be expanded for AI, powerups, persistence, etc.
+        // Logic update có thể được mở rộng ở đây
     }
 
     // Kiểm tra va chạm giữa ball & bricks, ball & paddle — trả về events
@@ -98,15 +114,28 @@ import java.util.List;
                         double by = brick.getY();
                         PowerUp powerUp;
 
-                        // 50% spawn ExpandPaddlePowerUp, 50% spawn FallingEffect
-                        if (random.nextBoolean()) {
-                            // Lấy ảnh đã load sẵn từ brickDisplay
-                            Image img = brickDisplay.getExpandPowerUpImage();
-                            powerUp = new ExpandPaddlePowerUp(bx, by, img);
-                        } else {
-                            // Lấy ảnh đã load sẵn từ brickDisplay
-                            Image img = brickDisplay.getFastBallPowerUpImage();
-                            powerUp = new FastBallPowerUp(bx, by, img);
+                        // ✨ CẬP NHẬT LOGIC DROP POWER-UP:
+                        // Sử dụng random.nextInt(3) để chọn ngẫu nhiên giữa 3 loại PowerUp.
+                        int powerUpType = random.nextInt(3); // 0, 1, hoặc 2
+
+                        Image img;
+                        switch (powerUpType) {
+                            case 0:
+                                // ExpandPaddlePowerUp
+                                img = brickDisplay.getExpandPowerUpImage();
+                                powerUp = new ExpandPaddlePowerUp(bx, by, img);
+                                break;
+                            case 1:
+                                // FastBallPowerUp
+                                img = brickDisplay.getFastBallPowerUpImage();
+                                powerUp = new FastBallPowerUp(bx, by, img);
+                                break;
+                            case 2:
+                            default:
+                                // ReverseControlsPowerUp
+                                img = brickDisplay.getReverseControlsPowerUpImage();
+                                powerUp = new ReverseControlsPowerUp(bx, by, img);
+                                break;
                         }
 
                         fallingPowerUps.add(powerUp);
@@ -144,9 +173,15 @@ import java.util.List;
         paddle.getPaddleView().setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0);
         fallingPowerUps.clear();
         bricksBrokenSinceLastDrop = 0;
+        // ✨ Đảm bảo hiệu ứng bị hủy khi reset
+        controlsReversed = false;
+        activeEffects.values().forEach(PauseTransition::stop);
+        activeEffects.clear();
     }
+
     public BrickDisplay getBrickDisplay() {
         return brickDisplay;
     }
+
 
 }

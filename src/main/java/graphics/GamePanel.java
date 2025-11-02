@@ -209,8 +209,7 @@ public class GamePanel extends Pane {
         Paddle paddle = manager.getPaddle();
         Ball ball = manager.getBall();
 
-        if (leftPressed) paddle.moveLeft(deltaTime);
-        if (rightPressed) paddle.moveRight(deltaTime, GameConfig.WINDOW_WIDTH);
+        paddle.move(deltaTime, leftPressed, rightPressed, GameConfig.WINDOW_WIDTH);
 
         if (ballMoving) {
             ball.move();
