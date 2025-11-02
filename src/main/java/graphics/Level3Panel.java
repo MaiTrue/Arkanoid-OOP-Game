@@ -5,7 +5,7 @@ import javafx.stage.Stage;
 
 public class Level3Panel extends GamePanel {
     public Level3Panel() {
-        super(BulbasaurPattern.DATA); // truyền pattern Bulbasaur
+        super(BulbasaurPattern.DATA, 3);
     }
 
     @Override
