@@ -62,8 +62,7 @@ public class Menu {
         Label level2 = createMenuItem("LEVEL 2", () -> loadGame(stage, () -> new Level2Panel()));
 
         // --- Level 3 (Luôn bật) ---
-        // (Vẫn dùng pattern Pikachu, và báo là level 3)
-        Label level3 = createMenuItem("LEVEL 3", () -> loadGame(stage, () -> new GamePanel(PikachuPattern.DATA, 3)));
+        Label level3 = createMenuItem("LEVEL 3", () -> loadGame(stage, () -> new Level3Panel()));
 
         // --- Nút Back ---
         Label back = createMenuItem("BACK", () -> show(stage));
