@@ -41,23 +41,27 @@ public class GamePanel extends Pane {
     private Line divider;
     private Button restartButton;
     private Button returnButton;
-    private javafx.scene.shape.Rectangle overlay;
     private boolean ballMoving = false; // lúc đầu bóng chưa chạy
     private SoundManager soundManager;
+    private ImageView background;
+    private ImageView backgroundEndView;
+    private int currentLevel;
 
     /**
      * Constructor chính: cho phép truyền pattern cho BrickDisplay.
      * Subclasses (Level panels) nên gọi super(pattern).
      */
-    public GamePanel(int[][] pattern) {
+    public GamePanel(int[][] pattern,int level) {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+
+        this.currentLevel = level;
 
         // Ảnh nền
         Image bg = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
-        ImageView bgView = new ImageView(bg);
-        bgView.setFitWidth(GameConfig.WINDOW_WIDTH);
-        bgView.setFitHeight(GameConfig.WINDOW_HEIGHT);
-        this.getChildren().add(bgView);
+        background = new ImageView(bg); // <-- Gán vào biến thành viên 'background'
+        background.setFitWidth(GameConfig.WINDOW_WIDTH);
+        background.setFitHeight(GameConfig.WINDOW_HEIGHT);
+        this.getChildren().add(background);
 
         // Canvas (để vẽ text hoặc hiệu ứng)
         canvas = new Canvas(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
@@ -65,11 +69,11 @@ public class GamePanel extends Pane {
         gc = canvas.getGraphicsContext2D();
         this.getChildren().add(canvas);
 
-        // Overlay mờ khi Game Over
-        overlay = new javafx.scene.shape.Rectangle(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-        overlay.setFill(Color.rgb(0, 0, 0, 0.6));
-        overlay.setVisible(false);
-        this.getChildren().add(overlay);
+        // back kết thúc
+        Image backgroundEnd = new Image(getClass().getResource("/image/background_end.jpg").toExternalForm());
+        backgroundEndView = new ImageView(backgroundEnd);
+        backgroundEndView.setFitWidth(GameConfig.WINDOW_WIDTH);
+        backgroundEndView.setFitHeight(GameConfig.WINDOW_HEIGHT);
 
         // Âm thanh
         soundManager = new SoundManager();
@@ -78,15 +82,28 @@ public class GamePanel extends Pane {
         // BrickDisplay + GameManager (dùng pattern được truyền vào)
         BrickDisplay brickDisplay = new BrickDisplay();
         brickDisplay.setPattern(pattern);
-        manager = new GameManager(brickDisplay);
+
+        Paddle paddle = new Paddle(
+                brickDisplay.getPaddleImage(),
+                GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0,
+                GameConfig.WINDOW_HEIGHT - 60,
+                GameConfig.PADDLE_WIDTH,
+                GameConfig.PADDLE_HEIGHT
+        );
+
+        Ball ball = new Ball(
+                brickDisplay.getBallImage(),
+                GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0,
+                GameConfig.WINDOW_HEIGHT - 100,
+                GameConfig.BALL_SIZE
+        );
+
+        manager = new GameManager(brickDisplay, paddle, ball);
 
         brickGroup = manager.getBrickGroup();
         this.getChildren().add(brickGroup);
 
         // Paddle và Ball lấy từ manager
-        Paddle paddle = manager.getPaddle();
-        Ball ball = manager.getBall();
-
         this.getChildren().addAll(paddle.getPaddleView(), ball.getBallView());
 
         // Hiển thị trái tim (mạng)
@@ -127,21 +144,21 @@ public class GamePanel extends Pane {
      * Constructor mặc định giữ tương thích trước đây: vẫn load Pikachu nếu không truyền pattern.
      */
     public GamePanel() {
-        this(PikachuPattern.DATA);
+        this(PikachuPattern.DATA, 1);
     }
 
     private void setupButtons() {
         restartButton = new Button("Restart");
         restartButton.setFont(new Font("Arial", 18));
         restartButton.setLayoutX(GameConfig.WINDOW_WIDTH / 2.0 - 120);
-        restartButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 40);
+        restartButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 170);
         restartButton.setVisible(false);
         restartButton.setOnAction(e -> restartGame());
 
         returnButton = new Button("Return to Menu");
         returnButton.setFont(new Font("Arial", 18));
         returnButton.setLayoutX(GameConfig.WINDOW_WIDTH / 2.0 - 10);
-        returnButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 40);
+        returnButton.setLayoutY(GameConfig.WINDOW_HEIGHT / 2.0 + 170);
         returnButton.setVisible(false);
         returnButton.setOnAction(e -> Menu.show((Stage) this.getScene().getWindow()));
 
@@ -192,8 +209,7 @@ public class GamePanel extends Pane {
         Paddle paddle = manager.getPaddle();
         Ball ball = manager.getBall();
 
-        if (leftPressed) paddle.moveLeft(deltaTime);
-        if (rightPressed) paddle.moveRight(deltaTime, GameConfig.WINDOW_WIDTH);
+        paddle.move(deltaTime, leftPressed, rightPressed, GameConfig.WINDOW_WIDTH);
 
         if (ballMoving) {
             ball.move();
@@ -287,15 +303,24 @@ public class GamePanel extends Pane {
     }
 
     private void showGameOver() {
-        overlay.setVisible(true);
+        this.getChildren().removeIf(node ->
+                node != canvas && node != restartButton && node != returnButton && node != scoreText
+        );
+        // Clear tất cả PowerUps
+        manager.getFallingPowerUps().clear();
+
+
+        if (!this.getChildren().contains(backgroundEndView)) {
+            this.getChildren().add(0, backgroundEndView); // đặt ở dưới cùng
+        }
 
         gc.setFill(Color.RED);
         gc.setFont(new Font("Arial", 48));
-        gc.fillText("GAME OVER", GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 40);
+        gc.fillText("GAME OVER", GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
 
         gc.setFill(Color.WHITE);
         gc.setFont(new Font("Arial", 28));
-        gc.fillText("Your score: " + manager.getScore(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0);
+        gc.fillText("Your score: " + manager.getScore(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 150);
 
         restartButton.setVisible(true);
         returnButton.setVisible(true);
@@ -306,11 +331,26 @@ public class GamePanel extends Pane {
         restartButton.setVisible(false);
         returnButton.setVisible(false);
 
-        // reset manager & UI
+        // reset lại manager
         manager.reset();
 
-        // reset hearts
-        this.getChildren().removeIf(node -> node instanceof ImageView && node != manager.getPaddle().getPaddleView() && node != manager.getBall().getBallView());
+        // xóa hết mọi thứ trừ canvas (để vẽ text) và các nút
+        this.getChildren().removeIf(node ->
+                node != background &&
+                        node != canvas &&
+                        node != restartButton &&
+                        node != returnButton &&
+                        node != scoreText
+        );
+
+        this.getChildren().add(0, background);
+        this.getChildren().add(divider);
+        brickGroup = manager.getBrickGroup(); // thêm lại brickGroup, paddle, ball
+        this.getChildren().addAll(brickGroup,
+                manager.getPaddle().getPaddleView(),
+                manager.getBall().getBallView());
+
+        // reset mạng (hearts)
         Image heartImage = new Image(getClass().getResource("/image/heart.png").toExternalForm());
         for (int i = 0; i < manager.getLives(); i++) {
             hearts[i] = new ImageView(heartImage);
@@ -321,15 +361,18 @@ public class GamePanel extends Pane {
             this.getChildren().add(hearts[i]);
         }
 
-        // reset brickGroup node
-        this.getChildren().remove(brickGroup);
-        brickGroup = manager.getBrickGroup();
-        this.getChildren().add(1, brickGroup);
+        // reset score
+        scoreText.setText("Point: 0");
 
-        // reset ball/paddle positions
+        // reset vị trí bóng và paddle
         manager.getBall().resetPosition();
         manager.getPaddle().getPaddleView().setX(GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0);
-        ballMoving = false;
+        manager.getPaddle().getPaddleView().setY(GameConfig.WINDOW_HEIGHT - 60);
+
+        ballMoving = false; // đợi SPACE để chạy lại
+
+        // Đảm bảo nhận phím trở lại
+        this.requestFocus();
     }
 
     public void show(Stage stage) {

@@ -1,11 +1,10 @@
 package graphics;
 
 import base.MovableObject;
+import core.GameManager;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
-import javafx.geometry.Rectangle2D;
-
 
 /**
  * Paddle kế thừa MovableObject nhưng dùng ImageView để hiển thị.
@@ -15,6 +14,7 @@ public class Paddle extends MovableObject {
     private final ImageView paddleView;
     private double speed = 600; // pixel mỗi giây
     private final double originalWidth;
+    private GameManager manager; // 🔥 Tham chiếu đến GameManager để kiểm tra hiệu ứng đảo điều khiển
 
     public Paddle(double x, double y, double width, double height) {
         super(x, y, width, height);
@@ -25,15 +25,6 @@ public class Paddle extends MovableObject {
         paddleView.setY(y);
         paddleView.setFitWidth(width);
         paddleView.setFitHeight(height);
-    }
-    public void setPaddleWidth(double newWidth) {
-        paddleView.setFitWidth(newWidth);
-        this.width = newWidth; // đồng bộ lại field width trong MovableObject
-    }
-
-
-    public double getOriginalWidth() {
-        return originalWidth;
     }
 
     public Paddle(Image image, double x, double y, double width, double height) {
@@ -46,7 +37,15 @@ public class Paddle extends MovableObject {
         paddleView.setFitHeight(height);
 
         // đồng bộ fields
-        this.x = x; this.y = y; this.width = width; this.height = height;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+
+    // 🔥 Gắn tham chiếu GameManager để Paddle biết khi nào điều khiển bị đảo
+    public void setGameManager(GameManager manager) {
+        this.manager = manager;
     }
 
     public ImageView getPaddleView() {
@@ -54,32 +53,60 @@ public class Paddle extends MovableObject {
     }
 
     @Override
-    public double getX() { return paddleView.getX(); }
+    public double getX() {
+        return paddleView.getX();
+    }
 
     @Override
-    public double getY() { return paddleView.getY(); }
+    public double getY() {
+        return paddleView.getY();
+    }
 
     @Override
-    public double getWidth() { return paddleView.getFitWidth(); }
+    public double getWidth() {
+        return paddleView.getFitWidth();
+    }
 
     @Override
-    public double getHeight() { return paddleView.getFitHeight(); }
+    public double getHeight() {
+        return paddleView.getFitHeight();
+    }
+
+    public void setPaddleWidth(double newWidth) {
+        paddleView.setFitWidth(newWidth);
+        this.width = newWidth; // đồng bộ lại field width trong MovableObject
+    }
+
+    public double getOriginalWidth() {
+        return originalWidth;
+    }
 
     // Di chuyển sang trái — có deltaTime để mượt hơn
     public void moveLeft(double deltaTime) {
-        dx = -speed;
+        boolean reversed = (manager != null && manager.isControlsReversed());
+
+        dx = reversed ? speed : -speed; // Nếu đảo, đi ngược hướng
         double newX = paddleView.getX() + dx * deltaTime;
+
         if (newX < 0) newX = 0;
+        if (newX + paddleView.getFitWidth() > 800) // hoặc GameConfig.WINDOW_WIDTH
+            newX = 800 - paddleView.getFitWidth();
+
         paddleView.setX(newX);
         this.x = newX;
     }
 
     // Di chuyển sang phải — có deltaTime để mượt hơn
     public void moveRight(double deltaTime, double windowWidth) {
-        dx = speed;
+        boolean reversed = (manager != null && manager.isControlsReversed());
+
+        dx = reversed ? -speed : speed; // Nếu đảo, đi ngược hướng
         double newX = paddleView.getX() + dx * deltaTime;
+
+        if (newX < 0) newX = 0;
         if (newX + paddleView.getFitWidth() > windowWidth)
             newX = windowWidth - paddleView.getFitWidth();
+
         paddleView.setX(newX);
         this.x = newX;
     }
@@ -97,4 +124,29 @@ public class Paddle extends MovableObject {
     public Rectangle2D getBounds() {
         return new Rectangle2D(x, y, width, height);
     }
+
+    public void move(double deltaTime, boolean movingLeft, boolean movingRight, double windowWidth) {
+        if (manager == null) return;
+
+        double actualSpeed = speed;
+        double newX = paddleView.getX();
+
+        // Nếu đang đảo điều khiển: đảo hướng
+        boolean reversed = manager.isControlsReversed();
+
+        if (movingLeft) {
+            newX += (reversed ? actualSpeed : -actualSpeed) * deltaTime;
+        } else if (movingRight) {
+            newX += (reversed ? -actualSpeed : actualSpeed) * deltaTime;
+        }
+
+        // Giới hạn biên
+        if (newX < 0) newX = 0;
+        if (newX + paddleView.getFitWidth() > windowWidth)
+            newX = windowWidth - paddleView.getFitWidth();
+
+        paddleView.setX(newX);
+        this.x = newX;
+    }
+
 }

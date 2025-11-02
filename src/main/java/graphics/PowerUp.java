@@ -1,6 +1,7 @@
 package graphics;
 
 import base.GameObject;
+import core.GameManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.ImageView;
@@ -12,13 +13,12 @@ public abstract class PowerUp extends GameObject {
     protected ImageView imageView;
     protected static final double FIXED_SIZE = 50; // ép size chung cho mọi vật phẩm
 
-    public PowerUp(double x, double y, String type, double duration) {
+    public PowerUp(double x, double y, String type, double duration, Image image) {
         super(x, y, FIXED_SIZE, FIXED_SIZE);
         this.type = type;
         this.duration = duration;
 
-        Image img = new Image(getClass().getResource("/image/effect2.png").toExternalForm());
-        imageView = new ImageView(img);
+        imageView = new ImageView(image);
         imageView.setPreserveRatio(true);
         imageView.setFitWidth(FIXED_SIZE);
         imageView.setFitHeight(FIXED_SIZE);
@@ -26,8 +26,8 @@ public abstract class PowerUp extends GameObject {
         imageView.setY(y);
     }
 
-    public abstract void applyEffect(Paddle paddle);
-    public abstract void removeEffect(Paddle paddle);
+    public abstract void applyEffect(GameManager manager);
+    public abstract void removeEffect(GameManager manager);
 
     @Override
     public void update(double deltaTime) {

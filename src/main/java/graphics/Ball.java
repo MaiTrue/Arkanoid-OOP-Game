@@ -13,6 +13,9 @@ public class Ball extends MovableObject {
     private double dx = 2;  // tốc độ ngang (pixel per frame như code gốc)
     private double dy = -2; // tốc độ dọc
 
+    private final double originalDx = 2;
+    private final double originalDy = -2;
+
     private final double startX;
     private final double startY;
 
@@ -55,11 +58,28 @@ public class Ball extends MovableObject {
         return withinXRange && touchingTop;
     }
 
+    /**
+     * Đặt tốc độ mới, giữ nguyên hướng.
+     * @param newSpeed Độ lớn tốc độ mới (ví dụ: 4)
+     */
+    public void setSpeed(double newSpeed) {
+        dx = (dx > 0) ? newSpeed : -newSpeed;
+        dy = (dy > 0) ? newSpeed : -newSpeed;
+    }
+
+    /**
+     * Trả về tốc độ gốc, giữ nguyên hướng.
+     */
+    public void resetSpeed() {
+        dx = (dx > 0) ? originalDx : -originalDx;
+        dy = (dy > 0) ? originalDy : -originalDy;
+    }
+
     public void resetPosition() {
         ballView.setX(startX);
         ballView.setY(startY);
-        dx = 2;
-        dy = -2;
+        dx = originalDx;
+        dy = originalDy;
         this.x = startX; this.y = startY;
     }
 
