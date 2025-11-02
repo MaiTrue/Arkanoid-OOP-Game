@@ -105,7 +105,7 @@ public class GameManager {
                     ball.reverseY();
                     score += 10;
 
-                    if (random.nextDouble() < 0.25) {
+                    if (random.nextDouble() < 0.1) {
                         double bx = brick.getX();
                         double by = brick.getY();
                         PowerUp powerUp;
