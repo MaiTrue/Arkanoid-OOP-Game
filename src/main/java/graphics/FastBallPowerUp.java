@@ -5,9 +5,8 @@ import core.GameManager;
 
 public class FastBallPowerUp extends PowerUp {
 
-    public FastBallPowerUp(double x, double y) {
-        super(x, y, "FastBall", 3);
-        imageView.setImage(new Image(getClass().getResource("/image/fast_ball.png").toExternalForm()));// GỌI THEO CONSTRUCTOR MỚI
+    public FastBallPowerUp(double x, double y, Image image) {
+        super(x, y, "FastBall", 3, image);
     }
 
     @Override

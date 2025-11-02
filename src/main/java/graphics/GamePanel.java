@@ -45,13 +45,16 @@ public class GamePanel extends Pane {
     private SoundManager soundManager;
     private ImageView background;
     private ImageView backgroundEndView;
+    private int currentLevel;
 
     /**
      * Constructor chính: cho phép truyền pattern cho BrickDisplay.
      * Subclasses (Level panels) nên gọi super(pattern).
      */
-    public GamePanel(int[][] pattern) {
+    public GamePanel(int[][] pattern,int level) {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+
+        this.currentLevel = level;
 
         // Ảnh nền
         Image bg = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
@@ -141,7 +144,7 @@ public class GamePanel extends Pane {
      * Constructor mặc định giữ tương thích trước đây: vẫn load Pikachu nếu không truyền pattern.
      */
     public GamePanel() {
-        this(PikachuPattern.DATA);
+        this(PikachuPattern.DATA, 1);
     }
 
     private void setupButtons() {

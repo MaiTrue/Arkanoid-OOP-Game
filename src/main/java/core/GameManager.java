@@ -4,7 +4,7 @@ import constants.GameConfig;
 import graphics.*;
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
-
+import javafx.scene.image.Image;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
  * GameManager: quản lý paddle, ball, bricks, score, lives, powerups.
  * GamePanel sẽ tạo GameManager và gọi update/check logic.
  */
-public class GameManager {
+  public class GameManager {
     private final Paddle paddle;
     private final Ball ball;
     private Group brickGroup; // Group of ImageView bricks
@@ -100,9 +100,13 @@ public class GameManager {
 
                         // 50% spawn ExpandPaddlePowerUp, 50% spawn FallingEffect
                         if (random.nextBoolean()) {
-                            powerUp = new ExpandPaddlePowerUp(bx, by); // có hiệu ứng phóng to paddle
+                            // Lấy ảnh đã load sẵn từ brickDisplay
+                            Image img = brickDisplay.getExpandPowerUpImage();
+                            powerUp = new ExpandPaddlePowerUp(bx, by, img);
                         } else {
-                            powerUp = new FastBallPowerUp(bx, by);
+                            // Lấy ảnh đã load sẵn từ brickDisplay
+                            Image img = brickDisplay.getFastBallPowerUpImage();
+                            powerUp = new FastBallPowerUp(bx, by, img);
                         }
 
                         fallingPowerUps.add(powerUp);

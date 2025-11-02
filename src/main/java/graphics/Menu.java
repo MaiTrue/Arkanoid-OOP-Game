@@ -1,6 +1,9 @@
 package graphics;
 
 import constants.GameConfig;
+import javafx.concurrent.Task;
+import javafx.scene.control.ProgressIndicator;
+import java.util.function.Supplier;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -12,6 +15,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import Patterns.PikachuPattern;
 
 public class Menu {
 
@@ -30,8 +34,8 @@ public class Menu {
         VBox menuBox = createMenuVBox();
 
         Label title = createTitle("ARKANOID");
-        Label newGame = createMenuItem("NEW GAME", () -> new GamePanel().show(stage));
-        Label levels  = createMenuItem("LEVELS", () -> showLevels(stage));
+        Label newGame = createMenuItem("NEW GAME", () -> showNewGameLevels(stage)); // SỬA: Gọi hàm chọn level
+        Label levels  = createMenuItem("BẢNG XẾP HẠNG", () -> showLeaderboard(stage)); // SỬA: Đổi tên và đổi hàm
         Label exit    = createMenuItem("EXIT", stage::close);
 
         menuBox.getChildren().addAll(title, newGame, levels, exit);
@@ -44,23 +48,34 @@ public class Menu {
         stage.show();
     }
 
-    // Màn hình chọn level
-    private static void showLevels(Stage stage) {
+    // Màn hình chọn level MỚI (khi bấm NEW GAME)
+    private static void showNewGameLevels(Stage stage) {
         VBox levelBox = createMenuVBox();
+        Label title = createTitle("CHỌN MÀN CHƠI"); // Đổi tiêu đề
 
-        Label title = createTitle("SELECT LEVEL");
-        Label level1 = createMenuItem("LEVEL 1", () -> new Level1Panel().show(stage));
-        Label level2 = createMenuItem("LEVEL 2", () -> new Level2Panel().show(stage));
-        Label level3 = createMenuItem("LEVEL 3", () -> new GamePanel().show(stage));
-        Label back   = createMenuItem("BACK", () -> show(stage));
+        // *** KHÔNG CẦN ĐỌC FILE LƯU GÌ NỮA ***
 
+        // --- Level 1 (Luôn bật) ---
+        Label level1 = createMenuItem("LEVEL 1", () -> loadGame(stage, () -> new Level1Panel()));
+
+        // --- Level 2 (Luôn bật) ---
+        Label level2 = createMenuItem("LEVEL 2", () -> loadGame(stage, () -> new Level2Panel()));
+
+        // --- Level 3 (Luôn bật) ---
+        // (Vẫn dùng pattern Pikachu, và báo là level 3)
+        Label level3 = createMenuItem("LEVEL 3", () -> loadGame(stage, () -> new GamePanel(PikachuPattern.DATA, 3)));
+
+        // --- Nút Back ---
+        Label back = createMenuItem("BACK", () -> show(stage));
+
+        // Thêm tất cả vào
         levelBox.getChildren().addAll(title, level1, level2, level3, back);
 
+        // (Code Scene cũ của bạn)
         Scene scene = new Scene(new StackPane(levelBox), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
         ((StackPane) scene.getRoot()).setStyle(BG_STYLE);
-
         stage.setScene(scene);
-        stage.setTitle("Arkanoid - Levels");
+        stage.setTitle("Arkanoid - Chọn Level");
     }
 
     // Tạo bố cục chính cho menu
@@ -101,5 +116,82 @@ public class Menu {
         // Khi click
         label.setOnMouseClicked(e -> action.run());
         return label;
+    }
+
+    private static Label createDisabledMenuItem(String text) {
+        Label label = new Label(text);
+        label.setFont(MENU_FONT);
+        label.setTextFill(Color.GRAY); // Màu xám
+        label.setOpacity(0.6); // Hơi mờ đi
+        label.setEffect(new DropShadow(8, Color.BLACK));
+        return label;
+    }
+
+    private static void loadGame(Stage stage, Supplier<GamePanel> gamePanelSupplier) {
+
+        // --- BƯỚC 1: TẠO MÀN HÌNH LOADING ---
+        // (Chạy trên Luồng UI)
+        ProgressIndicator spinner = new ProgressIndicator(); // Vòng quay
+        VBox loadingBox = createMenuVBox(); // Dùng lại hàm cũ của bạn
+        loadingBox.getChildren().addAll(createTitle("LOADING..."), spinner);
+
+        // Đặt nền tối cho màn hình loading
+        loadingBox.setStyle("-fx-background-color: #222;");
+
+        Scene loadingScene = new Scene(new StackPane(loadingBox), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+        stage.setScene(loadingScene);
+        stage.setTitle("Loading...");
+
+        // --- BƯỚC 2: TẠO TÁC VỤ NỀN (TASK) ---
+        // Task này sẽ trả về một GamePanel (là Level1Panel hoặc Level2Panel)
+        Task<GamePanel> loadTask = new Task<>() {
+            @Override
+            protected GamePanel call() throws Exception {
+                // *** DÒNG NÀY CHẠY TRÊN LUỒNG NỀN (BACKGROUND) ***
+                // Nó không làm "đơ" UI
+
+                // (Tùy chọn) Giả lập việc load nặng, bạn có thể xóa 2 dòng này
+                // try { Thread.sleep(1000); } catch (InterruptedException e) {}
+
+                // Đây là công việc chính: new Level1Panel()
+                // Nó sẽ load ảnh, tạo gạch...
+                return gamePanelSupplier.get();
+            }
+        };
+
+        // --- BƯỚC 3: LẮNG NGHE KHI TASK LÀM XONG ---
+        loadTask.setOnSucceeded(e -> {
+            // *** DÒNG NÀY CHẠY TRÊN LUỒNG UI (UI THREAD) ***
+
+            // Lấy kết quả (cái GamePanel đã load xong)
+            GamePanel loadedPanel = loadTask.getValue();
+
+            // Hiển thị game
+            loadedPanel.show(stage);
+        });
+
+        // (Tùy chọn) Lắng nghe nếu Task bị lỗi
+        loadTask.setOnFailed(e -> {
+            loadTask.getException().printStackTrace();
+            show(stage); // Quay về menu nếu lỗi
+        });
+
+        // --- BƯỚC 4: KHỞI CHẠY LUỒNG NỀN ---
+        new Thread(loadTask).start();
+    }
+
+    // Màn hình Bảng Xếp Hạng (hiện đang là placeholder)
+    private static void showLeaderboard(Stage stage) {
+        VBox box = createMenuVBox();
+        Label title = createTitle("BẢNG XẾP HẠNG");
+        Label placeholder = createDisabledMenuItem("(Coming Soon...)"); // Dùng lại hàm tạo nút mờ
+        Label back   = createMenuItem("BACK", () -> show(stage)); // Nút quay lại
+
+        box.getChildren().addAll(title, placeholder, back);
+
+        Scene scene = new Scene(new StackPane(box), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+        ((StackPane) scene.getRoot()).setStyle(BG_STYLE);
+        stage.setScene(scene);
+        stage.setTitle("Arkanoid - Leaderboard");
     }
 }

@@ -13,13 +13,12 @@ public abstract class PowerUp extends GameObject {
     protected ImageView imageView;
     protected static final double FIXED_SIZE = 50; // ép size chung cho mọi vật phẩm
 
-    public PowerUp(double x, double y, String type, double duration) {
+    public PowerUp(double x, double y, String type, double duration, Image image) {
         super(x, y, FIXED_SIZE, FIXED_SIZE);
         this.type = type;
         this.duration = duration;
 
-        Image img = new Image(getClass().getResource("/image/effect2.png").toExternalForm());
-        imageView = new ImageView(img);
+        imageView = new ImageView(image);
         imageView.setPreserveRatio(true);
         imageView.setFitWidth(FIXED_SIZE);
         imageView.setFitHeight(FIXED_SIZE);

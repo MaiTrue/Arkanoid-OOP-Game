@@ -5,10 +5,8 @@ import core.GameManager;
 
 public class ExpandPaddlePowerUp extends PowerUp {
 
-    public ExpandPaddlePowerUp(double x, double y) {
-        super(x, y, "Expand", 5);
-        // Không cần hình riêng, có thể dùng chung effect2.png hoặc hình bạn thích
-        imageView.setImage(new Image(getClass().getResource("/image/effect2.png").toExternalForm()));
+    public ExpandPaddlePowerUp(double x, double y, Image image) {
+        super(x, y, "Expand", 5, image);
     }
 
     @Override

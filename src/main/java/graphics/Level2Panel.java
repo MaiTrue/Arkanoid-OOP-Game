@@ -5,7 +5,7 @@ import javafx.stage.Stage;
 
 public class Level2Panel extends GamePanel {
     public Level2Panel() {
-        super(CharmanderPattern.DATA); // truyền pattern Charmander vào GamePanel
+        super(CharmanderPattern.DATA, 2); // truyền pattern Charmander vào GamePanel
     }
 
     @Override

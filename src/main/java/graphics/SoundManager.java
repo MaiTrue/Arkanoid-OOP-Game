@@ -40,7 +40,7 @@ public class SoundManager {
         collisionSound.play();
     }
     public void playBrickHitSound() {
-        brickHitSound.setVolume(0.5);
+        brickHitSound.setVolume(0.2);
         brickHitSound.play();
     }
     public void playPowerUpSound() { powerUpSound.play(); }
