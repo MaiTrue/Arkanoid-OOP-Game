@@ -52,9 +52,6 @@ public class Menu {
     private static void showNewGameLevels(Stage stage) {
         VBox levelBox = createMenuVBox();
         Label title = createTitle("CHỌN MÀN CHƠI"); // Đổi tiêu đề
-
-        // *** KHÔNG CẦN ĐỌC FILE LƯU GÌ NỮA ***
-
         // --- Level 1 (Luôn bật) ---
         Label level1 = createMenuItem("LEVEL 1", () -> loadGame(stage, () -> new Level1Panel()));
 

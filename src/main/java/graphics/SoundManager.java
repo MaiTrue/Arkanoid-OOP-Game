@@ -8,7 +8,7 @@ public class SoundManager {
     private MediaPlayer backgroundMusic;
     private AudioClip collisionSound;
     private AudioClip brickHitSound;
-    private AudioClip powerUpSound;
+    private MediaPlayer powerUpSoundPlayer;
     private AudioClip dieSound;
 
     public SoundManager() {
@@ -18,7 +18,10 @@ public class SoundManager {
 
             collisionSound = new AudioClip(getClass().getResource("/sounds/vacham.wav").toExternalForm());
             brickHitSound = new AudioClip(getClass().getResource("/sounds/phavogach.wav").toExternalForm());
-            powerUpSound = new AudioClip(getClass().getResource("/sounds/power_up.wav").toExternalForm());
+
+            Media powerUpMedia = new Media(getClass().getResource("/sounds/power_up.wav").toExternalForm());
+            powerUpSoundPlayer = new MediaPlayer(powerUpMedia);
+
             dieSound = new AudioClip(getClass().getResource("/sounds/matmang.wav").toExternalForm());
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,6 +46,12 @@ public class SoundManager {
         brickHitSound.setVolume(0.2);
         brickHitSound.play();
     }
-    public void playPowerUpSound() { powerUpSound.play(); }
+    public void playPowerUpSound() {
+        if (powerUpSoundPlayer != null) {
+            powerUpSoundPlayer.stop();
+            powerUpSoundPlayer.seek(powerUpSoundPlayer.getStartTime());
+            powerUpSoundPlayer.play();
+        }
+    }
     public void playDieSound() { dieSound.play(); }
 }

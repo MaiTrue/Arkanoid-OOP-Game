@@ -12,7 +12,7 @@ public class FastBallPowerUp extends PowerUp {
     @Override
     public void applyEffect(GameManager manager) {
         // Lấy Ball từ manager và tăng tốc
-        manager.getBall().setSpeed(4);
+        manager.getBall().setSpeed(600);
     }
 
     @Override

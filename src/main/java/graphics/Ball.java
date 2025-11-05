@@ -10,11 +10,11 @@ import javafx.scene.image.ImageView;
  */
 public class Ball extends MovableObject {
     private final ImageView ballView;
-    private double dx = 2;  // tốc độ ngang (pixel per frame như code gốc)
-    private double dy = -2; // tốc độ dọc
+    private double dx = 300;  // tốc độ ngang (pixel per frame như code gốc)
+    private double dy = -300; // tốc độ dọc
 
-    private final double originalDx = 2;
-    private final double originalDy = -2;
+    private final double originalDx = 300;
+    private final double originalDy = -300;
 
     private final double startX;
     private final double startY;
@@ -31,15 +31,18 @@ public class Ball extends MovableObject {
         this.startY = startY;
 
         this.x = startX; this.y = startY; this.width = size; this.height = size;
+
+        this.dx = originalDx;
+        this.dy = originalDy;
     }
 
     public ImageView getBallView() {
         return ballView;
     }
 
-    public void move() {
-        ballView.setX(ballView.getX() + dx);
-        ballView.setY(ballView.getY() + dy);
+    public void move(double deltaTime) {
+        ballView.setX(ballView.getX() + dx * deltaTime);
+        ballView.setY(ballView.getY() + dy * deltaTime);
         this.x = ballView.getX();
         this.y = ballView.getY();
     }
@@ -53,7 +56,7 @@ public class Ball extends MovableObject {
         double ballCenterX = getX() + getWidth() / 2;
 
         boolean withinXRange = ballCenterX >= paddle.getX() && ballCenterX <= paddle.getX() + paddle.getWidth();
-        boolean touchingTop = ballBottom >= paddleTop && ballBottom <= paddleTop + Math.abs(dy);
+        boolean touchingTop = ballBottom >= paddleTop && ballBottom <= paddleTop + (Math.abs(dy) * 0.05);
 
         return withinXRange && touchingTop;
     }
@@ -78,6 +81,7 @@ public class Ball extends MovableObject {
     public void resetPosition() {
         ballView.setX(startX);
         ballView.setY(startY);
+
         dx = originalDx;
         dy = originalDy;
         this.x = startX; this.y = startY;

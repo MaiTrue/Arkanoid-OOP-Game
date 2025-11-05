@@ -45,7 +45,6 @@ public class GamePanel extends Pane {
     private SoundManager soundManager;
     private ImageView background;
     private ImageView backgroundEndView;
-    private int currentLevel;
 
     /**
      * Constructor chính: cho phép truyền pattern cho BrickDisplay.
@@ -53,8 +52,6 @@ public class GamePanel extends Pane {
      */
     public GamePanel(int[][] pattern,int level) {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-
-        this.currentLevel = level;
 
         // Ảnh nền
         Image bg = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
@@ -212,16 +209,27 @@ public class GamePanel extends Pane {
         paddle.move(deltaTime, leftPressed, rightPressed, GameConfig.WINDOW_WIDTH);
 
         if (ballMoving) {
-            ball.move();
+            ball.move(deltaTime);
 
             // Va chạm biên
-            if (ball.getX() <= 0 || ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH) {
+            // 1. Va chạm biên TRÁI (Riêng biệt)
+            if (ball.getX() <= 0) {
                 ball.reverseX();
+                ball.getBallView().setX(0); // Buộc văng ra
+                soundManager.playCollisionSound();
+            }
+            // 2. Va chạm biên PHẢI (Dùng "else if")
+            else if (ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH) {
+                ball.reverseX();
+                // Buộc văng ra khỏi tường PHẢI (không phải setX(0)!)
+                ball.getBallView().setX(GameConfig.WINDOW_WIDTH - ball.getWidth());
                 soundManager.playCollisionSound();
             }
 
+            // 3. Va chạm biên TRÊN (Thêm setY)
             if (ball.getY() <= 50) {
                 ball.reverseY();
+                ball.getBallView().setY(50); // Buộc văng ra
                 soundManager.playCollisionSound();
             }
 
@@ -287,6 +295,7 @@ public class GamePanel extends Pane {
             Bounds powerBounds = p.getImageView().getBoundsInParent();
             Bounds paddleBounds = manager.getPaddle().getPaddleView().getBoundsInParent();
             if (powerBounds.intersects(paddleBounds)) {
+                soundManager.playPowerUpSound();
                 manager.applyPowerUp(p);
                 this.getChildren().remove(p.getImageView());
                 iterator.remove();
@@ -299,7 +308,6 @@ public class GamePanel extends Pane {
                 iterator.remove();
             }
         }
-
     }
 
     private void showGameOver() {

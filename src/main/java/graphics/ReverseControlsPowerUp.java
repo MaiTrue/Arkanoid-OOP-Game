@@ -9,7 +9,7 @@ public class ReverseControlsPowerUp extends PowerUp {
 
         // Gọi lớp cha, đặt tên là "Reverse", thời gian 7 giây.
         // DÙNG CHÍNH THAM SỐ 'image' TRUYỀN VÀO TỪ GAMEMANAGER
-        super(x, y, "Reverse", 4, image);
+        super(x, y, "Reverse", 3, image);
 
         // *** XÓA TẤT CẢ CODE GHI ĐÈ ẢNH Ở ĐÂY ***
         // (Không còn logic new Image(...) hay try/catch nữa)
