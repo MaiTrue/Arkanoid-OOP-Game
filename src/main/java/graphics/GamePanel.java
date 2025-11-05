@@ -1,8 +1,9 @@
 package graphics;
 
 import constants.GameConfig;
-import javafx.util.Duration;
 import core.GameManager;
+import core.GameRecord;
+import core.LeaderboardManager;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Bounds;
 import javafx.scene.Group;
@@ -18,14 +19,19 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-import graphics.SoundManager;
-import Patterns.PikachuPattern;
-
+import Patterns.PikachuPattern; // Đảm bảo lớp này tồn tại
 import java.util.Iterator;
+import javafx.scene.control.TextInputDialog; // <-- Bổ sung
+import java.util.Optional;                   // <-- Bổ sung
+import javafx.application.Platform;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
+
+
 
 /**
  * GamePanel: UI layer. Giữ nguyên logic gốc, bây giờ dùng GameManager để lưu trạng thái.
- * SỬA: bổ sung constructor nhận pattern để các LevelPanel truyền pattern khác nhau.
  */
 public class GamePanel extends Pane {
     private final Canvas canvas;
@@ -45,6 +51,13 @@ public class GamePanel extends Pane {
     private SoundManager soundManager;
     private ImageView background;
     private ImageView backgroundEndView;
+    private Timeline timer;
+
+    // --- THUỘC TÍNH BỔ SUNG CHO LEADERBOARD VÀ THỜI GIAN ---
+    private long startTimeNano; // Thời gian bắt đầu chơi (nanoseconds)
+    public LeaderboardManager leaderboardManager;
+    private boolean isWin = false; // Cờ check trạng thái thắng
+    // --------------------------------------------------------
 
     /**
      * Constructor chính: cho phép truyền pattern cho BrickDisplay.
@@ -55,7 +68,7 @@ public class GamePanel extends Pane {
 
         // Ảnh nền
         Image bg = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
-        background = new ImageView(bg); // <-- Gán vào biến thành viên 'background'
+        background = new ImageView(bg);
         background.setFitWidth(GameConfig.WINDOW_WIDTH);
         background.setFitHeight(GameConfig.WINDOW_HEIGHT);
         this.getChildren().add(background);
@@ -73,14 +86,18 @@ public class GamePanel extends Pane {
         backgroundEndView.setFitHeight(GameConfig.WINDOW_HEIGHT);
 
         // Âm thanh
-        soundManager = new SoundManager();
-        soundManager.playBackgroundMusic();
+        soundManager = new SoundManager(); // Giả định SoundManager tồn tại
+        // Sửa lỗi: Đảm bảo SoundManager không null trước khi gọi
+        if (soundManager != null) {
+            soundManager.playBackgroundMusic();
+        }
+
 
         // BrickDisplay + GameManager (dùng pattern được truyền vào)
-        BrickDisplay brickDisplay = new BrickDisplay();
+        BrickDisplay brickDisplay = new BrickDisplay(); // Giả định BrickDisplay tồn tại
         brickDisplay.setPattern(pattern);
 
-        Paddle paddle = new Paddle(
+        Paddle paddle = new Paddle( // Giả định Paddle tồn tại
                 brickDisplay.getPaddleImage(),
                 GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.PADDLE_WIDTH / 2.0,
                 GameConfig.WINDOW_HEIGHT - 60,
@@ -88,14 +105,14 @@ public class GamePanel extends Pane {
                 GameConfig.PADDLE_HEIGHT
         );
 
-        Ball ball = new Ball(
+        Ball ball = new Ball( // Giả định Ball tồn tại
                 brickDisplay.getBallImage(),
                 GameConfig.WINDOW_WIDTH / 2.0 - GameConfig.BALL_SIZE / 2.0,
                 GameConfig.WINDOW_HEIGHT - 100,
                 GameConfig.BALL_SIZE
         );
 
-        manager = new GameManager(brickDisplay, paddle, ball);
+        manager = new GameManager(brickDisplay, paddle, ball); // Giả định GameManager tồn tại
 
         brickGroup = manager.getBrickGroup();
         this.getChildren().add(brickGroup);
@@ -134,6 +151,13 @@ public class GamePanel extends Pane {
         this.setFocusTraversable(true);
         this.requestFocus();
 
+        // --- BỔ SUNG: KHỞI TẠO LEADERBOARD VÀ THỜI GIAN ---
+        // SỬA LỖI: Thay thế new LeaderboardManager() bằng LeaderboardManager.getInstance()
+        // để truy cập thể hiện Singleton.
+        this.leaderboardManager = LeaderboardManager.getInstance();
+        this.startTimeNano = System.nanoTime(); // Bắt đầu tính giờ
+        // ----------------------------------------------------
+
         startGameLoop();
     }
 
@@ -169,7 +193,12 @@ public class GamePanel extends Pane {
             switch (e.getCode()) {
                 case LEFT -> leftPressed = true;
                 case RIGHT -> rightPressed = true;
-                case SPACE -> ballMoving = true;
+                case SPACE -> {
+                    // Cần kiểm tra nếu trò chơi đang kết thúc, không cho phép di chuyển
+                    if (!gameOver) {
+                        ballMoving = true;
+                    }
+                }
             }
         });
         this.setOnKeyReleased(e -> {
@@ -212,48 +241,46 @@ public class GamePanel extends Pane {
             ball.move(deltaTime);
 
             // Va chạm biên
-            // 1. Va chạm biên TRÁI (Riêng biệt)
             if (ball.getX() <= 0) {
                 ball.reverseX();
-                ball.getBallView().setX(0); // Buộc văng ra
-                soundManager.playCollisionSound();
+                ball.getBallView().setX(0);
+                if (soundManager != null) soundManager.playCollisionSound();
             }
-            // 2. Va chạm biên PHẢI (Dùng "else if")
             else if (ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH) {
                 ball.reverseX();
-                // Buộc văng ra khỏi tường PHẢI (không phải setX(0)!)
                 ball.getBallView().setX(GameConfig.WINDOW_WIDTH - ball.getWidth());
-                soundManager.playCollisionSound();
+                if (soundManager != null) soundManager.playCollisionSound();
             }
 
-            // 3. Va chạm biên TRÊN (Thêm setY)
+            // 3. Va chạm biên TRÊN
             if (ball.getY() <= 50) {
                 ball.reverseY();
-                ball.getBallView().setY(50); // Buộc văng ra
-                soundManager.playCollisionSound();
+                ball.getBallView().setY(50);
+                if (soundManager != null) soundManager.playCollisionSound();
             }
 
             // Va chạm paddle
             if (ball.hitPaddle(paddle)) {
                 ball.reverseY();
                 ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
-                soundManager.playCollisionSound();
+                if (soundManager != null) soundManager.playCollisionSound();
             }
 
             // Va chạm gạch xài GameManager.handleCollisions
             manager.handleCollisions(() -> {
                 // onBrickDestroyed: update điểm text
                 scoreText.setText("Point: " + manager.getScore());
-                soundManager.playBrickHitSound();
+                if (soundManager != null) soundManager.playBrickHitSound();
             }, () -> {
                 // onAllBricksDestroyed: game over win
                 gameOver = true;
+                isWin = true; // <-- BỔ SUNG: Đặt cờ thắng
                 showGameOver();
             });
 
             // Bóng rơi -> mất mạng
             if (ball.getY() > GameConfig.WINDOW_HEIGHT) {
-                soundManager.playDieSound();
+                if (soundManager != null) soundManager.playDieSound();
 
                 // xóa trái tim tương ứng
                 int livesLeft = manager.getLives();
@@ -279,7 +306,7 @@ public class GamePanel extends Pane {
             ball.getBallView().setY(paddle.getY() - ball.getHeight() - 1);
         }
         // --- Cập nhật PowerUps ---
-        Iterator<PowerUp> iterator = manager.getFallingPowerUps().iterator();
+        Iterator<PowerUp> iterator = manager.getFallingPowerUps().iterator(); // Giả định PowerUp tồn tại
         while (iterator.hasNext()) {
             PowerUp p = iterator.next();
 
@@ -295,7 +322,7 @@ public class GamePanel extends Pane {
             Bounds powerBounds = p.getImageView().getBoundsInParent();
             Bounds paddleBounds = manager.getPaddle().getPaddleView().getBoundsInParent();
             if (powerBounds.intersects(paddleBounds)) {
-                soundManager.playPowerUpSound();
+                if (soundManager != null) soundManager.playPowerUpSound();
                 manager.applyPowerUp(p);
                 this.getChildren().remove(p.getImageView());
                 iterator.remove();
@@ -311,31 +338,60 @@ public class GamePanel extends Pane {
     }
 
     private void showGameOver() {
+        if (timer != null) timer.stop(); // Dừng vòng lặp vẽ
+
         this.getChildren().removeIf(node ->
-                node != canvas && node != restartButton && node != returnButton && node != scoreText
+                node != canvas && node != restartButton && node != returnButton && node != scoreText && node != backgroundEndView
         );
-        // Clear tất cả PowerUps
         manager.getFallingPowerUps().clear();
 
-
         if (!this.getChildren().contains(backgroundEndView)) {
-            this.getChildren().add(0, backgroundEndView); // đặt ở dưới cùng
+            this.getChildren().add(0, backgroundEndView);
         }
 
-        gc.setFill(Color.RED);
-        gc.setFont(new Font("Arial", 48));
-        gc.fillText("GAME OVER", GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
+        long endTimeNano = System.nanoTime();
+        long timeElapsedSeconds = (endTimeNano - startTimeNano) / 1_000_000_000;
+        String resultText = isWin ? "YOU WIN!" : "GAME OVER";
+        String defaultPlayerName = "Player";
 
-        gc.setFill(Color.WHITE);
-        gc.setFont(new Font("Arial", 28));
-        gc.fillText("Your score: " + manager.getScore(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 150);
+        Platform.runLater(() -> {
+            String formattedTime = String.format("%02d:%02d:%02d",
+                    timeElapsedSeconds / 3600, (timeElapsedSeconds % 3600) / 60, timeElapsedSeconds % 60);
 
-        restartButton.setVisible(true);
-        returnButton.setVisible(true);
+            Stage currentStage = (Stage) this.getScene().getWindow();
+            TextInputDialog dialog = new TextInputDialog(defaultPlayerName);
+            dialog.initOwner(currentStage);
+            dialog.setTitle(resultText + " - Save Score");
+            dialog.setHeaderText("Kết quả của bạn:\nĐiểm: " + manager.getScore() + "\nThời gian: " + formattedTime);
+            dialog.setContentText("Nhập tên người chơi:");
+
+            Optional<String> result = dialog.showAndWait();
+            String playerName = result.isPresent() && !result.get().trim().isEmpty()
+                    ? result.get().trim()
+                    : defaultPlayerName + "_" + System.currentTimeMillis() % 1000;
+
+            GameRecord record = new GameRecord(playerName, manager.getScore(), timeElapsedSeconds);
+            leaderboardManager.addRecord(record);
+
+            gc.setFill(isWin ? Color.LIMEGREEN : Color.RED);
+            gc.setFont(new Font("Arial", 48));
+            gc.fillText(resultText, GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
+
+            gc.setFill(Color.WHITE);
+            gc.setFont(new Font("Arial", 28));
+            gc.fillText("Your score: " + manager.getScore(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 150);
+            gc.fillText("Time: " + record.getFormattedTime(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 110);
+            gc.fillText("Saved as: " + playerName, GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 70);
+
+            restartButton.setVisible(true);
+            returnButton.setVisible(true);
+        });
     }
+
 
     private void restartGame() {
         gameOver = false;
+        isWin = false; // <-- BỔ SUNG: Reset cờ thắng
         restartButton.setVisible(false);
         returnButton.setVisible(false);
 
@@ -378,6 +434,10 @@ public class GamePanel extends Pane {
         manager.getPaddle().getPaddleView().setY(GameConfig.WINDOW_HEIGHT - 60);
 
         ballMoving = false; // đợi SPACE để chạy lại
+
+        // --- BỔ SUNG: Reset thời gian
+        this.startTimeNano = System.nanoTime();
+        // --------------------------
 
         // Đảm bảo nhận phím trở lại
         this.requestFocus();

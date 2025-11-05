@@ -4,18 +4,24 @@ import constants.GameConfig;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressIndicator;
 import java.util.function.Supplier;
+import java.util.List; // <-- Bổ sung
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane; // <-- Bổ sung
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox; // <-- Bổ sung
+import javafx.scene.layout.GridPane; // <-- Bổ sung
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import Patterns.PikachuPattern;
+import core.GameRecord;
+import core.LeaderboardManager;
+
 
 public class Menu {
 
@@ -34,8 +40,8 @@ public class Menu {
         VBox menuBox = createMenuVBox();
 
         Label title = createTitle("ARKANOID");
-        Label newGame = createMenuItem("NEW GAME", () -> showNewGameLevels(stage)); // SỬA: Gọi hàm chọn level
-        Label levels  = createMenuItem("BẢNG XẾP HẠNG", () -> showLeaderboard(stage)); // SỬA: Đổi tên và đổi hàm
+        Label newGame = createMenuItem("NEW GAME", () -> showNewGameLevels(stage));
+        Label levels  = createMenuItem("BẢNG XẾP HẠNG", () -> showLeaderboard(stage));
         Label exit    = createMenuItem("EXIT", stage::close);
 
         menuBox.getChildren().addAll(title, newGame, levels, exit);
@@ -51,7 +57,7 @@ public class Menu {
     // Màn hình chọn level MỚI (khi bấm NEW GAME)
     private static void showNewGameLevels(Stage stage) {
         VBox levelBox = createMenuVBox();
-        Label title = createTitle("CHỌN MÀN CHƠI"); // Đổi tiêu đề
+        Label title = createTitle("CHỌN MÀN CHƠI");
         // --- Level 1 (Luôn bật) ---
         Label level1 = createMenuItem("LEVEL 1", () -> loadGame(stage, () -> new Level1Panel()));
 
@@ -176,18 +182,119 @@ public class Menu {
         new Thread(loadTask).start();
     }
 
-    // Màn hình Bảng Xếp Hạng (hiện đang là placeholder)
+    // Màn hình Bảng Xếp Hạng ĐÃ CẬP NHẬT
     private static void showLeaderboard(Stage stage) {
-        VBox box = createMenuVBox();
-        Label title = createTitle("BẢNG XẾP HẠNG");
-        Label placeholder = createDisabledMenuItem("(Coming Soon...)"); // Dùng lại hàm tạo nút mờ
-        Label back   = createMenuItem("BACK", () -> show(stage)); // Nút quay lại
+        // Khởi tạo Leaderboard Manager
+        LeaderboardManager manager = LeaderboardManager.getInstance();
+        List<GameRecord> topScores = manager.getTopScores();
+        List<GameRecord> recentHistory = manager.getRecentHistory();
 
-        box.getChildren().addAll(title, placeholder, back);
+        // 1. Tạo giao diện chính
+        VBox mainBox = createMenuVBox();
+        Label title = createTitle("BẢNG XẾP HẠNG & LỊCH SỬ CHƠI");
 
-        Scene scene = new Scene(new StackPane(box), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+        // 2. Tạo 2 Bảng (HBox chứa 2 ScrollPane)
+        HBox contentBox = new HBox(50); // Khoảng cách 50 giữa 2 bảng
+        contentBox.setAlignment(Pos.CENTER);
+
+        // --- PHẦN 1: TOP 10 CAO ĐIỂM NHẤT ---
+        VBox topScoresBox = createRecordVBox("TOP ĐIỂM CAO NHẤT", topScores, true);
+
+        // --- PHẦN 2: 10 LẦN CHƠI GẦN NHẤT ---
+        VBox recentHistoryBox = createRecordVBox("LẦN CHƠI GẦN NHẤT", recentHistory, false);
+
+        contentBox.getChildren().addAll(topScoresBox, recentHistoryBox);
+
+        // 3. Nút quay lại
+        Label back   = createMenuItem("BACK", () -> show(stage));
+
+        mainBox.getChildren().addAll(title, contentBox, back);
+
+        Scene scene = new Scene(new StackPane(mainBox), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
         ((StackPane) scene.getRoot()).setStyle(BG_STYLE);
         stage.setScene(scene);
         stage.setTitle("Arkanoid - Leaderboard");
+    }
+    // Tạo Header Cột
+    private static Label createColumnHeader(String text) {
+        Label label = new Label(text);
+        label.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
+        label.setTextFill(Color.web("#00FFFF")); // Xanh Cyan
+        return label;
+    }
+
+    // Tạo Label Dữ liệu
+    private static Label createRecordLabel(String text) {
+        Label label = new Label(text);
+        label.setFont(Font.font("Monospace", FontWeight.NORMAL, 14));
+        label.setTextFill(Color.WHITE);
+        return label;
+    }
+    // Tạo VBox chứa Tiêu đề + Bảng dữ liệu
+    private static VBox createRecordVBox(String title, List<GameRecord> records, boolean isTopScore) {
+        VBox box = new VBox(10);
+        box.setAlignment(Pos.TOP_CENTER);
+        box.setPrefWidth(GameConfig.WINDOW_WIDTH / 2.0 - 50);
+
+        // Tiêu đề nhỏ của bảng
+        Label titleLabel = new Label(title);
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        titleLabel.setTextFill(Color.web("#FFFF00"));
+
+        // Bảng dữ liệu (GridPane)
+        GridPane grid = new GridPane();
+        grid.setVgap(10);
+        grid.setHgap(15);
+        // ✅ QUAN TRỌNG: Thiết lập căn chỉnh cho GridPane
+        grid.setAlignment(Pos.TOP_CENTER); // Căn giữa bảng
+        grid.setStyle("-fx-padding: 10; -fx-background-color: rgba(0, 0, 0, 0.5); -fx-border-radius: 5;");
+
+        // Tiêu đề cột
+        // Dùng createColumnHeader đã được tạo
+        grid.add(createColumnHeader(isTopScore ? "RANK" : "STT"), 0, 0);
+        grid.add(createColumnHeader("PLAYER"), 1, 0);
+        grid.add(createColumnHeader("TIME"), 2, 0);
+        grid.add(createColumnHeader("SCORE"), 3, 0);
+        if (!isTopScore) {
+            grid.add(createColumnHeader("WHEN"), 4, 0);
+        }
+
+        // Dữ liệu
+        int row = 1;
+        for (GameRecord record : records) {
+            // Cột Rank/STT
+            grid.add(createRecordLabel(String.valueOf(row)), 0, row);
+            // Cột Tên
+            grid.add(createRecordLabel(record.getPlayerName()), 1, row);
+            // Cột Thời gian chơi (Duration)
+            grid.add(createRecordLabel(record.getFormattedTime()), 2, row);
+            // Cột Điểm
+            grid.add(createRecordLabel(String.valueOf(record.getScore())), 3, row);
+
+            if (!isTopScore) {
+                // Cột Thời điểm (Timestamp)
+                grid.add(createRecordLabel(record.getFormattedTimestamp()), 4, row);
+            }
+            row++;
+        }
+
+        // Tạo label thông báo nếu không có dữ liệu
+        if (records.isEmpty()) {
+            Label emptyLabel = createDisabledMenuItem("(Chưa có dữ liệu)");
+            // Căn giữa thông báo
+            grid.add(emptyLabel, 0, 1, isTopScore ? 4 : 5, 1); // Trải rộng qua tất cả các cột
+            GridPane.setHalignment(emptyLabel, javafx.geometry.HPos.CENTER);
+        }
+
+        // Dùng ScrollPane để cuộn nếu quá nhiều record
+        ScrollPane scrollPane = new ScrollPane(grid);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(350);
+        // ✅ QUAN TRỌNG: Thiết lập nền trong suốt cho ScrollPane để thấy GridPane
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-border-color: #555; -fx-border-width: 2;");
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+        box.getChildren().addAll(titleLabel, scrollPane);
+        return box;
     }
 }
