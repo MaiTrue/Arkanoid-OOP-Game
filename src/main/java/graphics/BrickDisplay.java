@@ -18,12 +18,19 @@ public class BrickDisplay {
     private Image fastBallPowerUpImage;
     private Image reverseControlsPowerUpImage;
 
+    // ✨ KHAI BÁO THUỘC TÍNH CHO SHIELD POWER-UP
+    private Image shieldPowerUpImage;
+
     public BrickDisplay() {
         paddleImage = new Image(getClass().getResource("/image/paddle2.png").toExternalForm());
         ballImage = new Image(getClass().getResource("/image/ball2.png").toExternalForm());
         expandPowerUpImage = new Image(getClass().getResource("/image/effect2.png").toExternalForm());
         fastBallPowerUpImage = new Image(getClass().getResource("/image/fast_ball.png").toExternalForm());
         reverseControlsPowerUpImage = new Image(getClass().getResource("/image/ReverseControlsPowerUp.png").toExternalForm());
+
+        // ✨ TẢI HÌNH ẢNH SHIELD POWER-UP
+        // Đảm bảo file 'shield.png' nằm trong thư mục resources/image
+        shieldPowerUpImage = new Image(getClass().getResource("/image/shield.png").toExternalForm());
 
         brickImages = new Image[]{
                 new Image(getClass().getResource("/image/yellow.png").toExternalForm()), // 1 = vàng
@@ -92,5 +99,10 @@ public class BrickDisplay {
 
     public Image getReverseControlsPowerUpImage() {
         return reverseControlsPowerUpImage;
+    }
+
+    // ✨ PHƯƠNG THỨC GETTER MỚI CHO SHIELD
+    public Image getShieldPowerUpImage() {
+        return shieldPowerUpImage;
     }
 }

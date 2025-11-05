@@ -33,6 +33,9 @@ public class GameManager {
     // ✨ Thêm trạng thái điều khiển ngược
     private boolean controlsReversed = false;
 
+    // ✨ THÊM TRẠNG THÁI LÁ CHẮN (SHIELD)
+    private boolean isShieldActive = false;
+
     public List<PowerUp> getFallingPowerUps() {
         return fallingPowerUps;
     }
@@ -40,6 +43,11 @@ public class GameManager {
     private final Map<String, PauseTransition> activeEffects = new HashMap<>();
 
     public void applyPowerUp(PowerUp p) {
+        // ✨ LOGIC NGĂN CHẶN CỘNG DỒN CHO SHIELD
+        if (p.getType().equals("Shield") && isShieldActive) {
+            return; // Đã có Shield, không làm gì cả.
+        }
+
         // Nếu loại này đang có hiệu ứng — reset lại timer
         if (activeEffects.containsKey(p.getType())) {
             activeEffects.get(p.getType()).stop();
@@ -49,13 +57,19 @@ public class GameManager {
         p.applyEffect(this);
 
         // Tạo timer để remove sau duration
+        // Shield có duration lớn, timer này sẽ không bao giờ hết hạn tự động
         PauseTransition timer =
                 new PauseTransition(Duration.seconds(p.getDuration()));
         timer.setOnFinished(e -> {
             p.removeEffect(this);
             activeEffects.remove(p.getType());
         });
-        timer.play();
+
+        // Nếu không phải Shield, chạy timer
+        // (Nếu là Shield, timer này chỉ cần được lưu để hủy khi reset game)
+        if (!p.getType().equals("Shield")) {
+            timer.play();
+        }
 
         // Ghi nhớ hiệu ứng đang hoạt động
         activeEffects.put(p.getType(), timer);
@@ -90,6 +104,17 @@ public class GameManager {
         return controlsReversed;
     }
 
+    // ✨ SETTER VÀ GETTER MỚI CHO SHIELD (ĐÃ KHẮC PHỤC LỖI)
+    public void setShieldActive(boolean active) {
+        this.isShieldActive = active;
+        // Logic hiển thị/ẩn thanh chắn có thể được đặt ở đây hoặc trong GamePanel
+    }
+
+    public boolean hasShield() {
+        return isShieldActive;
+    }
+
+
     // Cập nhật logic va chạm giữa ball và bricks/paddle, tính điểm, mạng
     public void update(double deltaTime) {
         // Logic update có thể được mở rộng ở đây
@@ -114,9 +139,9 @@ public class GameManager {
                         double by = brick.getY();
                         PowerUp powerUp;
 
-                        // ✨ CẬP NHẬT LOGIC DROP POWER-UP:
-                        // Sử dụng random.nextInt(3) để chọn ngẫu nhiên giữa 3 loại PowerUp.
-                        int powerUpType = random.nextInt(3); // 0, 1, hoặc 2
+                        // ✨ CẬP NHẬT LOGIC DROP POWER-UP (Bây giờ có 4 loại):
+                        // Sử dụng random.nextInt(4) để chọn ngẫu nhiên giữa 4 loại PowerUp.
+                        int powerUpType = random.nextInt(4); // 0, 1, 2, hoặc 3
 
                         Image img;
                         switch (powerUpType) {
@@ -131,10 +156,15 @@ public class GameManager {
                                 powerUp = new FastBallPowerUp(bx, by, img);
                                 break;
                             case 2:
-                            default:
                                 // ReverseControlsPowerUp
                                 img = brickDisplay.getReverseControlsPowerUpImage();
                                 powerUp = new ReverseControlsPowerUp(bx, by, img);
+                                break;
+                            case 3:
+                            default:
+                                // ✨ ShieldPowerUp MỚI
+                                img = brickDisplay.getShieldPowerUpImage(); // Cần đảm bảo BrickDisplay có getter này
+                                powerUp = new ShieldPowerUp(bx, by, img);
                                 break;
                         }
 
@@ -157,6 +187,15 @@ public class GameManager {
 
     // Khi bóng rơi
     public void ballDropped(Runnable onGameOver) {
+        // ✨ LOGIC MỚI: KIỂM TRA LÁ CHẮN TRƯỚC KHI GIẢM MẠNG
+        if (isShieldActive) {
+            setShieldActive(false); // Vô hiệu hóa shield sau khi đỡ
+            ball.resetPosition();   // Đưa bóng về vị trí ban đầu
+            // Không giảm lives
+            return;
+        }
+
+        // Logic cũ (nếu không có shield)
         lives--;
         if (lives <= 0) {
             if (onGameOver != null) onGameOver.run();
@@ -175,6 +214,7 @@ public class GameManager {
         bricksBrokenSinceLastDrop = 0;
         // ✨ Đảm bảo hiệu ứng bị hủy khi reset
         controlsReversed = false;
+        isShieldActive = false; // Reset trạng thái Shield
         activeEffects.values().forEach(PauseTransition::stop);
         activeEffects.clear();
     }
