@@ -8,7 +8,8 @@
  
  2.Mai : 
  - xử lý va chạm: bóng va chạm với thanh, bóng va chạm với tường, bóng phá vỡ gạch
-  
+ - bảng xếp hạng
+     
  3.Quyền:
  - menu: tạo menu
  - vẽ map các level
