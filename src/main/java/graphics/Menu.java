@@ -247,7 +247,7 @@ public class Menu {
         int limit = Math.min(records.size(), 10);
         for (int i = 0; i < limit; i++) {
             GameRecord record = records.get(i);
-            HBox dataRow = new HBox(5); // Khoảng cách nhỏ giữa các cột
+            HBox dataRow = new HBox(5);
             dataRow.setAlignment(Pos.CENTER_LEFT);
 
             String playerName = record.getPlayerName().length() > 20

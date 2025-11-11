@@ -6,29 +6,29 @@ import core.GameRecord;
 import core.LeaderboardManager;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Bounds;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-import Patterns.PikachuPattern; // Đảm bảo lớp này tồn tại
+import Patterns.PikachuPattern;
 import java.util.Iterator;
-import javafx.scene.control.TextInputDialog; // <-- Bổ sung
-import java.util.Optional;                   // <-- Bổ sung
 import javafx.application.Platform;
-import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.util.Duration;
-import javafx.scene.control.ButtonType;
-
 
 
 /**
@@ -52,7 +52,6 @@ public class GamePanel extends Pane {
     private SoundManager soundManager;
     private ImageView background;
     private ImageView backgroundEndView;
-    private Timeline timer;
     private AnimationTimer gameTimer;
     private long startTimeNano;
     public LeaderboardManager leaderboardManager;
@@ -63,7 +62,7 @@ public class GamePanel extends Pane {
      * Constructor chính: cho phép truyền pattern cho BrickDisplay.
      * Subclasses (Level panels) nên gọi super(pattern).
      */
-    public GamePanel(int[][] pattern,int level) {
+    public GamePanel(int[][] pattern, int level) {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
         // Ảnh nền
@@ -90,7 +89,6 @@ public class GamePanel extends Pane {
         if (soundManager != null) {
             soundManager.playBackgroundMusic();
         }
-
 
 
         BrickDisplay brickDisplay = new BrickDisplay();
@@ -231,8 +229,7 @@ public class GamePanel extends Pane {
                 ball.reverseX();
                 ball.getBallView().setX(0);
                 if (soundManager != null) soundManager.playCollisionSound();
-            }
-            else if (ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH) {
+            } else if (ball.getX() + ball.getWidth() >= GameConfig.WINDOW_WIDTH) {
                 ball.reverseX();
                 ball.getBallView().setX(GameConfig.WINDOW_WIDTH - ball.getWidth());
                 if (soundManager != null) soundManager.playCollisionSound();
@@ -323,92 +320,119 @@ public class GamePanel extends Pane {
     private void showGameOver() {
         if (gameTimer != null) gameTimer.stop();
 
-        // 🌟 BỎ backgroundEndView, CHỈ GIỮ LẠI background GỐC 🌟
+        // 🌟 1. DỌN DẸP MÀN HÌNH 🌟
         this.getChildren().removeIf(node ->
                 node != canvas && node != restartButton && node != returnButton && node != scoreText && node != background
         );
         manager.getFallingPowerUps().clear();
 
-        // Đảm bảo background GỐC được thêm vào
         if (!this.getChildren().contains(background)) {
             this.getChildren().add(0, background);
         }
 
-        // 🌟 BƯỚC MỚI: TẠO OVERLAY NỬA TRONG SUỐT 🌟
-        javafx.scene.layout.StackPane overlay = new javafx.scene.layout.StackPane();
+        // 🌟 2. TẠO VÀ THÊM OVERLAY (StackPane) 🌟
+        StackPane overlay = new StackPane();
         overlay.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-        // Nền đen trong suốt (RGBA: Đen 80% độ mờ)
         overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.8);");
-
-        // Thêm overlay lên trên background nhưng dưới các thành phần UI khác
         this.getChildren().add(1, overlay);
 
         long endTimeNano = System.nanoTime();
         long timeElapsedSeconds = (endTimeNano - startTimeNano) / 1_000_000_000;
+
+        // KHAI BÁO CÁC BIẾN CẦN THIẾT (Chỉ khai báo một lần tại đây)
         String resultText = isWin ? "YOU WIN!" : "GAME OVER";
-        String defaultPlayerName = "Player";
+        String formattedTime = String.format("%02d:%02d:%02d",
+                timeElapsedSeconds / 3600, (timeElapsedSeconds % 3600) / 60, timeElapsedSeconds % 60);
 
-        Platform.runLater(() -> {
-            String formattedTime = String.format("%02d:%02d:%02d",
-                    timeElapsedSeconds / 3600, (timeElapsedSeconds % 3600) / 60, timeElapsedSeconds % 60);
+        // Xóa Canvas để chuẩn bị vẽ tiêu đề lớn
+        gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
-            Stage currentStage = (Stage) this.getScene().getWindow();
+        // Vẽ Tiêu đề lớn GAME OVER/YOU WIN lên Canvas
+        gc.setFill(isWin ? Color.LIMEGREEN : Color.RED);
+        gc.setFont(Font.font("Arial", 48));
+        gc.fillText(resultText, GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
 
-            // Định nghĩa ButtonType SAVE
-            ButtonType saveButton = new ButtonType("SAVE", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        // --------------------------------------------------------
+        // 🌟 3. TẠO VÀ HIỂN THỊ CÁC THÀNH PHẦN INLINE (Sử dụng VBox) 🌟
+        // --------------------------------------------------------
 
-            TextInputDialog dialog = new TextInputDialog(defaultPlayerName);
-            dialog.initOwner(currentStage);
-            dialog.setTitle(resultText + " - Save Score");
-            dialog.setHeaderText("Kết quả của bạn:\nĐiểm: " + manager.getScore() + "\nThời gian: " + formattedTime);
-            dialog.setContentText("Nhập tên người chơi:");
+        // VBox chứa thông tin và ô nhập liệu
+        VBox resultInputBox = new VBox(15);
+        resultInputBox.setAlignment(Pos.CENTER);
+        resultInputBox.setTranslateY(-50); // Dịch lên trên để tránh nút Restart/Return
 
-            // 🌟 Thay thế nút OK bằng SAVE (theo yêu cầu trước) 🌟
-            dialog.getDialogPane().getButtonTypes().clear();
-            dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CANCEL);
+        // 3a. Label kết quả
+        Label scoreLabel = new Label("Your score: " + manager.getScore());
+        Label timeLabel = new Label("Time: " + formattedTime);
 
-            Optional<String> result = dialog.showAndWait();
+        scoreLabel.setFont(Font.font("Arial", 28));
+        timeLabel.setFont(Font.font("Arial", 28));
+        scoreLabel.setTextFill(Color.WHITE);
+        timeLabel.setTextFill(Color.WHITE);
 
-            // Xóa Overlay sau khi dialog đóng để chuẩn bị cho việc vẽ lại UI
-            this.getChildren().remove(overlay);
+        // 3b. HBox chứa ô nhập tên
+        TextField nameInput = new TextField();
+        nameInput.setPromptText("Enter your name...");
+        nameInput.setMaxWidth(250);
+        nameInput.setFont(Font.font("Arial", 16));
 
-            if (result.isPresent() && result.get() != null) {
-                String playerName = !result.get().trim().isEmpty()
-                        ? result.get().trim()
-                        : defaultPlayerName + "_" + System.currentTimeMillis() % 1000;
+        Label promptLabel = new Label("Enter your name:");
+        promptLabel.setFont(Font.font("Arial", 18));
+        promptLabel.setTextFill(Color.WHITE);
 
-                GameRecord record = new GameRecord(playerName, manager.getScore(), timeElapsedSeconds);
-                leaderboardManager.addRecord(record);
+        HBox inputRow = new HBox(10, promptLabel, nameInput);
+        inputRow.setAlignment(Pos.CENTER);
 
-                // 1. Vẽ lại Overlay để hiển thị thông tin điểm
-                this.getChildren().add(1, overlay); // Thêm lại Overlay
+        // 3c. Nút SAVE
+        Button saveButton = new Button("SAVE SCORE");
+        saveButton.setFont(Font.font("Arial", 18));
+        saveButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
 
-                gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT); // Xóa canvas cũ
+        // Thêm tất cả vào VBox
+        resultInputBox.getChildren().addAll(scoreLabel, timeLabel, inputRow, saveButton);
+        overlay.getChildren().add(resultInputBox); // Thêm VBox vào StackPane Overlay
 
-                gc.setFill(isWin ? Color.LIMEGREEN : Color.RED);
-                gc.setFont(new Font("Arial", 48));
-                gc.fillText(resultText, GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
-
-                gc.setFill(Color.RED); // Màu đỏ theo yêu cầu trước
-                gc.setFont(new Font("Arial", 28));
-                gc.fillText("Your score: " + manager.getScore(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 150);
-                gc.fillText("Time: " + record.getFormattedTime(), GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 110);
-                gc.fillText("Saved as: " + playerName, GameConfig.WINDOW_WIDTH / 2.0 - 100, GameConfig.WINDOW_HEIGHT / 2.0 - 70);
-
-                restartButton.setVisible(true);
-                returnButton.setVisible(true);
-            } else {
-                // Nếu người dùng bấm Cancel, chỉ hiển thị màn hình Game Over/You Win cơ bản
-                gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-                this.getChildren().add(1, overlay);
-
-                gc.setFill(isWin ? Color.LIMEGREEN : Color.RED);
-                gc.setFont(new Font("Arial", 48));
-                gc.fillText(resultText, GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
-
-                restartButton.setVisible(true);
-                returnButton.setVisible(true);
+        // 🌟 4. LOGIC LƯU ĐIỂM (Gắn vào nút SAVE) 🌟
+        saveButton.setOnAction(e -> {
+            String playerName = nameInput.getText().trim();
+            if (playerName.isEmpty()) {
+                playerName = "Player_" + (System.currentTimeMillis() % 1000);
             }
+
+            // Ghi nhận GameRecord
+            GameRecord record = new GameRecord(playerName, manager.getScore(), timeElapsedSeconds);
+            leaderboardManager.addRecord(record);
+
+            // --- XÓA VÀ VẼ LẠI NỘI DUNG TĨNH ---
+            overlay.getChildren().remove(resultInputBox);
+            gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT); // Xóa Canvas cũ
+
+            // Lấy lại thời gian định dạng từ record vừa lưu
+            String finalFormattedTime = record.getFormattedTime(); // Dùng biến mới để tránh lỗi
+
+            // 1. Vẽ Tiêu đề lớn GAME OVER/YOU WIN
+            gc.setFill(isWin ? Color.LIMEGREEN : Color.RED);
+            gc.setFont(Font.font("Arial", 48));
+            gc.fillText(resultText, GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
+
+            // 2. Vẽ thông tin chi tiết (Player Name, Score, Time)
+            gc.setFill(Color.WHITE);
+            gc.setFont(Font.font("Arial", 24));
+
+            double startY = GameConfig.WINDOW_HEIGHT / 2.0 - 140;
+            double offsetX = GameConfig.WINDOW_WIDTH / 2.0 - 150;
+
+            gc.fillText("Player Name: " + playerName, offsetX, startY);
+
+            gc.fillText("Your Score: " + manager.getScore(), offsetX, startY + 40);
+
+            gc.fillText("Time: " + finalFormattedTime, offsetX, startY + 80);
+
+
+            restartButton.setVisible(true);
+            returnButton.setVisible(true);
+
+            saveButton.setDisable(true);
         });
     }
 
@@ -421,13 +445,17 @@ public class GamePanel extends Pane {
 
         manager.reset();
 
+        // 🌟 Khắc phục: Xóa các node động cũ, bao gồm Overlay (StackPane) 🌟
         this.getChildren().removeIf(node ->
-                node != background &&
-                        node != canvas &&
-                        node != restartButton &&
-                        node != returnButton &&
-                        node != scoreText
+                (node instanceof StackPane && node.getStyle() != null && node.getStyle().contains("rgba(0, 0, 0, 0.8)")) || // Xóa Overlay
+                        node != background &&
+                                node != canvas &&
+                                node != restartButton &&
+                                node != returnButton &&
+                                node != scoreText
         );
+        // Xóa text Game Over/Score cũ trên Canvas
+        gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
         this.getChildren().add(0, background);
         this.getChildren().add(divider);
@@ -437,6 +465,8 @@ public class GamePanel extends Pane {
                 manager.getBall().getBallView());
 
         Image heartImage = new Image(getClass().getResource("/image/heart.png").toExternalForm());
+
+        hearts = new ImageView[manager.getLives()];
         for (int i = 0; i < manager.getLives(); i++) {
             hearts[i] = new ImageView(heartImage);
             hearts[i].setFitWidth(30);
