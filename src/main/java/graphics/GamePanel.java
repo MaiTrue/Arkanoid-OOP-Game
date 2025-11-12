@@ -64,25 +64,21 @@ public class GamePanel extends Pane {
 
     /**
      * Constructor chính: cho phép truyền pattern cho BrickDisplay.
-     * Subclasses (Level panels) nên gọi super(pattern).
      */
     public GamePanel(int[][] pattern, int level) {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
-        // Ảnh nền
         Image bg = new Image(getClass().getResource("/image/background.jpg").toExternalForm());
         background = new ImageView(bg);
         background.setFitWidth(GameConfig.WINDOW_WIDTH);
         background.setFitHeight(GameConfig.WINDOW_HEIGHT);
         this.getChildren().add(background);
 
-        // Canvas (để vẽ text hoặc hiệu ứng)
         canvas = new Canvas(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
         canvas.setMouseTransparent(true);
         gc = canvas.getGraphicsContext2D();
         this.getChildren().add(canvas);
 
-        // back kết thúc
         Image backgroundEnd = new Image(getClass().getResource("/image/background_end.jpg").toExternalForm());
         backgroundEndView = new ImageView(backgroundEnd);
         backgroundEndView.setFitWidth(GameConfig.WINDOW_WIDTH);
@@ -98,7 +94,7 @@ public class GamePanel extends Pane {
         try {
             Image pauseImage = new Image(getClass().getResource("/image/tamdung.png").toExternalForm());
             pauseImageView = new ImageView(pauseImage);
-            pauseImageView.setFitWidth(450);
+            pauseImageView.setFitWidth(300);
             pauseImageView.setPreserveRatio(true);
 
             pauseImageView.setLayoutX((GameConfig.WINDOW_WIDTH - pauseImageView.getFitWidth()) / 2);
@@ -137,15 +133,9 @@ public class GamePanel extends Pane {
 
         this.getChildren().addAll(paddle.getPaddleView(), ball.getBallView());
 
-        Image heartImage = new Image(getClass().getResource("/image/heart.png").toExternalForm());
-        for (int i = 0; i < manager.getLives(); i++) {
-            hearts[i] = new ImageView(heartImage);
-            hearts[i].setFitWidth(30);
-            hearts[i].setFitHeight(30);
-            hearts[i].setX(20 + i * 35);
-            hearts[i].setY(10);
-            this.getChildren().add(hearts[i]);
-        }
+        // GỌI HÀM KHỞI TẠO HEARTS BAN ĐẦU
+        initHearts();
+        // -------------------------------------
 
         scoreText = new Text("Point: " + manager.getScore());
         scoreText.setFont(Font.font("Arial", 20));
@@ -207,7 +197,7 @@ public class GamePanel extends Pane {
                             // 2. Tạm dừng/Tiếp tục (nếu bóng đã chạy)
                             isPaused = !isPaused;
 
-                            // 🔥 HIỂN THỊ/ẨN ẢNH TẠM DỪNG
+                            // HIỂN THỊ/ẨN ẢNH TẠM DỪNG
                             if (pauseImageView != null) {
                                 pauseImageView.setVisible(isPaused);
                                 // Đảm bảo ảnh luôn ở lớp trên cùng khi hiển thị
@@ -251,9 +241,10 @@ public class GamePanel extends Pane {
     }
 
     private void update(double deltaTime) {
+        // FIX QUAN TRỌNG: Đảm bảo Canvas được xóa trong mọi frame
         gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
-        // 🔥 DỪNG LOGIC GAME KHI TẠM DỪNG
+        // DỪNG LOGIC GAME KHI TẠM DỪNG
         if (isPaused) {
             return;
         }
@@ -361,7 +352,7 @@ public class GamePanel extends Pane {
     private void showGameOver() {
         if (gameTimer != null) gameTimer.stop();
 
-        // 🌟 DỌN DẸP MÀN HÌNH 🌟
+        // 🌟 1. DỌN DẸP MÀN HÌNH 🌟
         this.getChildren().removeIf(node ->
                 node != canvas && node != restartButton && node != returnButton && node != scoreText && node != background && node != pauseImageView
         );
@@ -488,37 +479,34 @@ public class GamePanel extends Pane {
 
         manager.reset();
 
-        // 🌟 Khắc phục: Xóa các node động cũ, bao gồm Overlay (StackPane) 🌟
+        // 🌟 1. FIX DUPLICATE CHILDREN & XÓA NODE CŨ 🌟
         this.getChildren().removeIf(node ->
                 (node instanceof StackPane && node.getStyle() != null && node.getStyle().contains("rgba(0, 0, 0, 0.8)")) || // Xóa Overlay
-                        node != background &&
-                                node != canvas &&
-                                node != restartButton &&
-                                node != returnButton &&
-                                node != scoreText &&
-                                node != pauseImageView // Giữ lại ImageView tạm dừng
+                        // GIỮ LẠI: background, canvas, buttons, scoreText, divider, pauseImageView
+                        !(node == background || node == canvas || node == restartButton || node == returnButton || node == scoreText || node == divider || node == pauseImageView)
         );
+
         // Xóa text Game Over/Score cũ trên Canvas
         gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
-        this.getChildren().add(0, background);
-        this.getChildren().add(divider);
+        // 🌟 2. THÊM LẠI CÁC THÀNH PHẦN GAME MỚI (VÀ FIX LỖI MẤT DIVIDER) 🌟
+
+        // Đảm bảo Layering các Node tĩnh
+        background.toBack();
+        divider.toFront();
+        scoreText.toFront();
+        restartButton.toFront();
+        returnButton.toFront();
+
         brickGroup = manager.getBrickGroup();
         this.getChildren().addAll(brickGroup,
                 manager.getPaddle().getPaddleView(),
                 manager.getBall().getBallView());
 
-        Image heartImage = new Image(getClass().getResource("/image/heart.png").toExternalForm());
+        // TẠO VÀ THÊM LẠI HEARTS
+        initHearts();
+        // -------------------------------------
 
-        hearts = new ImageView[manager.getLives()];
-        for (int i = 0; i < manager.getLives(); i++) {
-            hearts[i] = new ImageView(heartImage);
-            hearts[i].setFitWidth(30);
-            hearts[i].setFitHeight(30);
-            hearts[i].setX(20 + i * 35);
-            hearts[i].setY(10);
-            this.getChildren().add(hearts[i]);
-        }
         scoreText.setText("Point: 0");
 
         manager.getBall().resetPosition();
@@ -539,6 +527,23 @@ public class GamePanel extends Pane {
         }
         canvas.toFront();
     }
+
+    // PHƯƠNG THỨC KHỞI TẠO HEARTS BAN ĐẦU/SAU KHI RESTART (Đây là fix lỗi duplicate)
+    private void initHearts() {
+        Image heartImage = new Image(getClass().getResource("/image/heart.png").toExternalForm());
+        hearts = new ImageView[manager.getLives()];
+        for (int i = 0; i < manager.getLives(); i++) {
+            ImageView newHeart = new ImageView(heartImage);
+            hearts[i] = newHeart;
+            newHeart.setFitWidth(30);
+            newHeart.setFitHeight(30);
+            newHeart.setX(20 + i * 35);
+            newHeart.setY(10);
+            this.getChildren().add(newHeart);
+        }
+    }
+    // -----------------------------------------------------
+
     public void show(Stage stage) {
         Scene scene = new Scene(this, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
         stage.setScene(scene);
