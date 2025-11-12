@@ -9,8 +9,9 @@
 
 ### Mai:
 - Xử lý va chạm: bóng va chạm với thanh, bóng va chạm với tường, bóng phá vỡ gạch  
-- Bảng xếp hạng  
-
+- Bảng xếp hạng
+- Lưu tên
+- 
 ### Quyền:
 - Menu: tạo menu  
 - Vẽ map các level  
@@ -90,7 +91,7 @@ Trò chơi kết thúc khi hết gạch (thắng) hoặc hết mạng (thua).
 - **Menu.java:** Xử lý giao diện Menu chính, chọn “New Game”, “Leaderboard”, dùng `Task` để load màn chơi.  
 - **GamePanel.java:** Lớp `Pane` chính chứa vòng lặp game (`AnimationTimer`), hiển thị và cập nhật đối tượng 60 lần/giây.  
 - **Level1Panel.java / Level2Panel.java / Level3Panel.java:** Kế thừa `GamePanel`, chỉ định `Pattern` tương ứng.  
-- **SaveScoreWindow.java:** Tạo cửa sổ pop-up nhập tên người chơi khi Game Over, lưu dữ liệu vào `LeaderboardManager`.  
+- **Leaderboard.java:** Hiển thị Bảng Xếp Hạng Top 5 người chơi, gồm thứ hạng, tên, thời gian, điểm số, với nút BACK về menu.
 - **Ball.java:** Kế thừa `MovableObject`. Cung cấp logic nảy (`reverseX()`, `reverseY()`) và va chạm với paddle (`hitPaddle()`).  
 - **Paddle.java:** Kế thừa `MovableObject`. Cung cấp logic di chuyển `moveLeft()` và `moveRight()`.  
 - **BrickDisplay.java:** Tải trước toàn bộ tài nguyên ảnh gạch, bóng, paddle, power-up để đảm bảo hiệu năng.  
