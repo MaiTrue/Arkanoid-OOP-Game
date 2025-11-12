@@ -55,7 +55,11 @@ public class GamePanel extends Pane {
     private AnimationTimer gameTimer;
     private long startTimeNano;
     public LeaderboardManager leaderboardManager;
-    private boolean isWin = false; // Cờ check trạng thái thắng
+    private boolean isWin = false;
+
+    // THUỘC TÍNH PAUSE
+    private boolean isPaused = false;
+    private ImageView pauseImageView;
     // --------------------------------------------------------
 
     /**
@@ -88,6 +92,23 @@ public class GamePanel extends Pane {
 
         if (soundManager != null) {
             soundManager.playBackgroundMusic();
+        }
+
+        // KHỞI TẠO ẢNH TẠM DỪNG
+        try {
+            Image pauseImage = new Image(getClass().getResource("/image/tamdung.png").toExternalForm());
+            pauseImageView = new ImageView(pauseImage);
+            pauseImageView.setFitWidth(450);
+            pauseImageView.setPreserveRatio(true);
+
+            pauseImageView.setLayoutX((GameConfig.WINDOW_WIDTH - pauseImageView.getFitWidth()) / 2);
+            pauseImageView.setLayoutY((GameConfig.WINDOW_HEIGHT - pauseImageView.getFitHeight()) / 2);
+
+            pauseImageView.setVisible(false); // Ẩn khi khởi động
+            this.getChildren().add(pauseImageView);
+
+        } catch (Exception e) {
+            System.err.println("Không tìm thấy file tamdung.png: " + e.getMessage());
         }
 
 
@@ -147,6 +168,7 @@ public class GamePanel extends Pane {
         this.startTimeNano = System.nanoTime();
 
         startGameLoop();
+        canvas.toFront();
     }
 
 
@@ -170,8 +192,6 @@ public class GamePanel extends Pane {
         returnButton.setOnAction(e -> Menu.show((Stage) this.getScene().getWindow()));
 
         this.getChildren().addAll(restartButton, returnButton);
-        this.getChildren().remove(canvas);
-        this.getChildren().add(canvas);
     }
 
     private void setupControls() {
@@ -181,7 +201,21 @@ public class GamePanel extends Pane {
                 case RIGHT -> rightPressed = true;
                 case SPACE -> {
                     if (!gameOver) {
-                        ballMoving = true;
+                        if (!ballMoving) {
+                            ballMoving = true;
+                        } else {
+                            // 2. Tạm dừng/Tiếp tục (nếu bóng đã chạy)
+                            isPaused = !isPaused;
+
+                            // 🔥 HIỂN THỊ/ẨN ẢNH TẠM DỪNG
+                            if (pauseImageView != null) {
+                                pauseImageView.setVisible(isPaused);
+                                // Đảm bảo ảnh luôn ở lớp trên cùng khi hiển thị
+                                if (isPaused) {
+                                    pauseImageView.toFront();
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -195,7 +229,9 @@ public class GamePanel extends Pane {
     }
 
     private void startGameLoop() {
-        gameTimer = new AnimationTimer() { // <-- Gán vào biến thành viên
+        if (gameTimer != null) return;
+
+        gameTimer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 if (lastFrameTime == 0) {
@@ -211,11 +247,16 @@ public class GamePanel extends Pane {
                 }
             }
         };
-        gameTimer.start(); // <-- Dùng gameTimer
+        gameTimer.start();
     }
 
     private void update(double deltaTime) {
         gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+
+        // 🔥 DỪNG LOGIC GAME KHI TẠM DỪNG
+        if (isPaused) {
+            return;
+        }
 
         Paddle paddle = manager.getPaddle();
         Ball ball = manager.getBall();
@@ -320,14 +361,19 @@ public class GamePanel extends Pane {
     private void showGameOver() {
         if (gameTimer != null) gameTimer.stop();
 
-        // 🌟 1. DỌN DẸP MÀN HÌNH 🌟
+        // 🌟 DỌN DẸP MÀN HÌNH 🌟
         this.getChildren().removeIf(node ->
-                node != canvas && node != restartButton && node != returnButton && node != scoreText && node != background
+                node != canvas && node != restartButton && node != returnButton && node != scoreText && node != background && node != pauseImageView
         );
         manager.getFallingPowerUps().clear();
 
         if (!this.getChildren().contains(background)) {
             this.getChildren().add(0, background);
+        }
+
+        // Ẩn ảnh tạm dừng nếu nó đang hiển thị
+        if (pauseImageView != null) {
+            pauseImageView.setVisible(false);
         }
 
         // 🌟 2. TẠO VÀ THÊM OVERLAY (StackPane) 🌟
@@ -339,7 +385,7 @@ public class GamePanel extends Pane {
         long endTimeNano = System.nanoTime();
         long timeElapsedSeconds = (endTimeNano - startTimeNano) / 1_000_000_000;
 
-        // KHAI BÁO CÁC BIẾN CẦN THIẾT (Chỉ khai báo một lần tại đây)
+        // KHAI BÁO CÁC BIẾN CẦN THIẾT
         String resultText = isWin ? "YOU WIN!" : "GAME OVER";
         String formattedTime = String.format("%02d:%02d:%02d",
                 timeElapsedSeconds / 3600, (timeElapsedSeconds % 3600) / 60, timeElapsedSeconds % 60);
@@ -405,17 +451,15 @@ public class GamePanel extends Pane {
 
             // --- XÓA VÀ VẼ LẠI NỘI DUNG TĨNH ---
             overlay.getChildren().remove(resultInputBox);
-            gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT); // Xóa Canvas cũ
-
-            // Lấy lại thời gian định dạng từ record vừa lưu
-            String finalFormattedTime = record.getFormattedTime(); // Dùng biến mới để tránh lỗi
 
             // 1. Vẽ Tiêu đề lớn GAME OVER/YOU WIN
+            gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
             gc.setFill(isWin ? Color.LIMEGREEN : Color.RED);
             gc.setFont(Font.font("Arial", 48));
             gc.fillText(resultText, GameConfig.WINDOW_WIDTH / 2.0 - 150, GameConfig.WINDOW_HEIGHT / 2.0 - 200);
 
             // 2. Vẽ thông tin chi tiết (Player Name, Score, Time)
+            String finalFormattedTime = record.getFormattedTime();
             gc.setFill(Color.WHITE);
             gc.setFont(Font.font("Arial", 24));
 
@@ -423,9 +467,7 @@ public class GamePanel extends Pane {
             double offsetX = GameConfig.WINDOW_WIDTH / 2.0 - 150;
 
             gc.fillText("Player Name: " + playerName, offsetX, startY);
-
             gc.fillText("Your Score: " + manager.getScore(), offsetX, startY + 40);
-
             gc.fillText("Time: " + finalFormattedTime, offsetX, startY + 80);
 
 
@@ -439,7 +481,8 @@ public class GamePanel extends Pane {
 
     private void restartGame() {
         gameOver = false;
-        isWin = false; // <-- BỔ SUNG: Reset cờ thắng
+        isWin = false;
+        isPaused = false; // Đảm bảo trạng thái pause được reset
         restartButton.setVisible(false);
         returnButton.setVisible(false);
 
@@ -452,14 +495,15 @@ public class GamePanel extends Pane {
                                 node != canvas &&
                                 node != restartButton &&
                                 node != returnButton &&
-                                node != scoreText
+                                node != scoreText &&
+                                node != pauseImageView // Giữ lại ImageView tạm dừng
         );
         // Xóa text Game Over/Score cũ trên Canvas
         gc.clearRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
         this.getChildren().add(0, background);
         this.getChildren().add(divider);
-        brickGroup = manager.getBrickGroup(); // thêm lại brickGroup, paddle, ball
+        brickGroup = manager.getBrickGroup();
         this.getChildren().addAll(brickGroup,
                 manager.getPaddle().getPaddleView(),
                 manager.getBall().getBallView());
@@ -484,9 +528,16 @@ public class GamePanel extends Pane {
         ballMoving = false;
         this.startTimeNano = System.nanoTime();
         this.requestFocus();
+
+        // Ẩn ảnh tạm dừng khi restart
+        if (pauseImageView != null) {
+            pauseImageView.setVisible(false);
+        }
+
         if (gameTimer != null) {
             gameTimer.start();
         }
+        canvas.toFront();
     }
     public void show(Stage stage) {
         Scene scene = new Scene(this, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);

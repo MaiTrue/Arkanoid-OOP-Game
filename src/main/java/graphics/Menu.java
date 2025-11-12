@@ -1,58 +1,135 @@
 package graphics;
 
 import constants.GameConfig;
+import core.LeaderboardManager;
 import javafx.concurrent.Task;
-import javafx.scene.control.ProgressIndicator;
-import java.util.function.Supplier;
-import java.util.List;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.effect.DropShadow;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import java.util.function.Supplier;
+import java.util.List;
 import core.GameRecord;
-import core.LeaderboardManager;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.GridPane;
 
 
 public class Menu {
 
-    // Màu và font mặc định cho toàn menu
+    private static ImageView helpImageView;
+
     private static final String BG_STYLE = """
-                -fx-background-image: url('/image/menu1.png');
-                -fx-background-size: cover;
-                -fx-background-position: center center;
-            """;
+        -fx-background-image: url('/image/menu1.png');
+        -fx-background-size: cover;
+        -fx-background-position: center center;
+    """;
 
     private static final Font TITLE_FONT = Font.font("Verdana", FontWeight.EXTRA_BOLD, 64);
     private static final Font MENU_FONT = Font.font("Arial", FontWeight.BOLD, 36);
 
+
     // Màn hình menu chính
     public static void show(Stage stage) {
+        Pane root = new Pane();
+        root.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+
         VBox menuBox = createMenuVBox();
 
         Label title = createTitle("ARKANOID");
         Label newGame = createMenuItem("NEW GAME", () -> showNewGameLevels(stage));
-        Label levels = createMenuItem("BẢNG XẾP HẠNG", () -> showLeaderboard(stage));
-        Label exit = createMenuItem("EXIT", stage::close);
+        Label levels  = createMenuItem("BẢNG XẾP HẠNG", () -> showLeaderboard(stage));
+        Label exit    = createMenuItem("EXIT", stage::close);
 
         menuBox.getChildren().addAll(title, newGame, levels, exit);
 
-        Scene scene = new Scene(new StackPane(menuBox), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-        ((StackPane) scene.getRoot()).setStyle(BG_STYLE);
+        StackPane stackPane = new StackPane(menuBox);
+        stackPane.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+        stackPane.setStyle(BG_STYLE);
 
+        root.getChildren().add(stackPane);
+
+        // ------------- THÊM BIỂU TƯỢNG DẤU CHẤM THAN (HELP ICON) -------------
+        try {
+            // Đảm bảo file help_icon.png tồn tại trong resources/image/
+            Image helpIconImage = new Image(Menu.class.getResource("/image/help_icon1.png").toExternalForm());
+            ImageView helpIcon = new ImageView(helpIconImage);
+            helpIcon.setFitWidth(40);
+            helpIcon.setFitHeight(40);
+            helpIcon.setLayoutX(GameConfig.WINDOW_WIDTH - 50);
+            helpIcon.setLayoutY(10);
+            helpIcon.setPickOnBounds(true);
+            helpIcon.setStyle("-fx-cursor: hand;");
+
+            helpIcon.setOnMouseClicked(event -> {
+                showHelp(root); // Gọi hàm hiển thị hướng dẫn
+            });
+            root.getChildren().add(helpIcon);
+        } catch (Exception e) {
+            System.err.println("Lỗi tải help_icon.png: " + e.getMessage());
+        }
+        // -----------------------------------------------------------------------
+
+
+        Scene scene = new Scene(root, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
         stage.setScene(scene);
         stage.setTitle("Arkanoid - Main Menu");
         stage.show();
     }
+
+    // Logic hiển thị/ẩn ảnh hướng dẫn
+    private static void showHelp(Pane root) {
+        if (helpImageView == null || !root.getChildren().contains(helpImageView)) {
+            try {
+                // Tải ảnh hướng dẫn
+                Image helpGuideImage = new Image(Menu.class.getResource("/image/huongdan.png").toExternalForm());
+                helpImageView = new ImageView(helpGuideImage);
+
+                // Đặt kích cỡ ảnh (65% width)
+                helpImageView.setFitWidth(GameConfig.WINDOW_WIDTH * 0.55);
+                helpImageView.setPreserveRatio(true);
+
+                // Đặt ảnh hướng dẫn ở giữa màn hình (theo chiều ngang)
+                helpImageView.setLayoutX((GameConfig.WINDOW_WIDTH - helpImageView.getFitWidth()) / 2);
+
+                // FIX LỖI LỆCH DƯỚI: Dịch chuyển ảnh lên trên 200px
+                double Y_OFFSET = 200;
+                helpImageView.setLayoutY((GameConfig.WINDOW_HEIGHT - helpImageView.getFitHeight()) / 2 - Y_OFFSET);
+
+                // Tạo nền mờ (overlay)
+                Pane overlay = new Pane();
+                overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7);");
+                overlay.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+
+                // Click ra ngoài để đóng
+                overlay.setOnMouseClicked(e -> {
+                    root.getChildren().remove(overlay);
+                    root.getChildren().remove(helpImageView);
+                    helpImageView = null;
+                });
+
+                root.getChildren().add(overlay);
+                root.getChildren().add(helpImageView);
+
+            } catch (Exception e) {
+                System.err.println("Lỗi tải huongdan.png: " + e.getMessage());
+            }
+        } else {
+            // Logic đóng ảnh đã được xử lý bởi overlay.setOnMouseClicked
+        }
+    }
+
 
     private static void showNewGameLevels(Stage stage) {
         VBox levelBox = createMenuVBox();
@@ -149,121 +226,9 @@ public class Menu {
         new Thread(loadTask).start();
     }
 
+    // Phương thức gọi Leaderboard (Đã chuyển sang gọi Leaderboard.java)
     private static void showLeaderboard(Stage stage) {
-        LeaderboardManager manager = LeaderboardManager.getInstance();
-        List<GameRecord> topScores = manager.getTopScores();
-
-        VBox mainBox = createMenuVBox();
-        Label title = createTitle("BẢNG XẾP HẠNG");
-
-        HBox contentBox = new HBox(50);
-        contentBox.setAlignment(Pos.CENTER);
-        contentBox.setPrefWidth(GameConfig.WINDOW_WIDTH);
-        VBox topScoresBox = createSimpleRecordDisplay("TOP 10 ĐIỂM CAO", topScores, true);
-
-        contentBox.getChildren().addAll(topScoresBox);
-        Label back = createMenuItem("QUAY LẠI", () -> show(stage));
-
-        mainBox.setSpacing(15);
-        mainBox.getChildren().addAll(title, contentBox, back);
-
-        Scene scene = new Scene(new StackPane(mainBox), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-        ((StackPane) scene.getRoot()).setStyle(BG_STYLE);
-        stage.setScene(scene);
-        stage.setTitle("Arkanoid - Leaderboard");
-    }
-
-    private static Label createSimpleColumnHeader(String text) {
-        Label label = new Label(text);
-        label.setFont(Font.font("Monospace", FontWeight.EXTRA_BOLD, 20));
-        label.setTextFill(Color.web("#FFFF00"));
-        return label;
-    }
-
-    private static Label createSimpleRecordLabel(String text) {
-        Label label = new Label(text);
-        label.setFont(Font.font("Monospace", FontWeight.NORMAL, 16));
-        label.setTextFill(Color.WHITE);
-        label.setEffect(new DropShadow(3, 1, 1, Color.BLACK));
-        return label;
-    }
-
-    private static double getMinWidthForColumn(String columnName) {
-        return switch (columnName.toUpperCase()) {
-            case "HẠNG", "STT" -> 60.0;
-            case "TÊN" -> 200.0;
-            case "THỜI GIAN" -> 120.0;
-            case "ĐIỂM" -> 100.0;
-            default -> 50.0;
-        };
-    }
-
-    private static Label createHeaderLabel(String text) {
-        Label label = new Label(text);
-        label.setFont(Font.font("Arial", FontWeight.EXTRA_BOLD, 20));
-        label.setTextFill(Color.web("#FFFF00"));
-        label.setMinWidth(getMinWidthForColumn(text));
-        label.setAlignment(Pos.CENTER_LEFT);
-        return label;
-    }
-
-    private static Label createRecordLabel(String text, String columnName) {
-        Label label = new Label(text);
-        label.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
-        label.setTextFill(Color.WHITE);
-        label.setEffect(new DropShadow(3, 1, 1, Color.BLACK));
-        label.setMinWidth(getMinWidthForColumn(columnName));
-        label.setAlignment(Pos.CENTER_LEFT);
-        return label;
-    }
-
-    private static VBox createSimpleRecordDisplay(String title, List<GameRecord> records, boolean isTopScore) {
-        VBox box = new VBox(5);
-        box.setAlignment(Pos.TOP_CENTER);
-        box.setMinWidth(500);
-
-        Label titleLabel = new Label(title);
-        titleLabel.setFont(Font.font("Arial", FontWeight.EXTRA_BOLD, 28));
-        titleLabel.setTextFill(Color.web("#00FFFF"));
-        titleLabel.setEffect(new DropShadow(5, 2, 2, Color.BLACK));
-        box.getChildren().add(titleLabel);
-
-        HBox headerRow = new HBox(5); // Khoảng cách nhỏ giữa các cột
-        headerRow.setAlignment(Pos.CENTER_LEFT);
-
-        headerRow.getChildren().addAll(
-                createHeaderLabel(isTopScore ? "Hạng" : "STT"),
-                createHeaderLabel("Tên"),
-                createHeaderLabel("Thời Gian"),
-                createHeaderLabel("Điểm")
-        );
-        box.getChildren().add(headerRow);
-
-        if (records.isEmpty()) {
-            box.getChildren().add(createDisabledMenuItem("(Chưa có dữ liệu)"));
-            return box;
-        }
-
-        int limit = Math.min(records.size(), 10);
-        for (int i = 0; i < limit; i++) {
-            GameRecord record = records.get(i);
-            HBox dataRow = new HBox(5);
-            dataRow.setAlignment(Pos.CENTER_LEFT);
-
-            String playerName = record.getPlayerName().length() > 20
-                    ? record.getPlayerName().substring(0, 19) + "..."
-                    : record.getPlayerName();
-
-            dataRow.getChildren().addAll(
-                    createRecordLabel(String.valueOf(i + 1), isTopScore ? "Hạng" : "STT"),
-                    createRecordLabel(playerName, "Tên"),
-                    createRecordLabel(record.getFormattedTime(), "Thời Gian"),
-                    createRecordLabel(String.valueOf(record.getScore()), "Điểm")
-            );
-
-            box.getChildren().add(dataRow);
-        }
-
-        return box;
+        Leaderboard leaderboard = new Leaderboard();
+        leaderboard.show(stage);
     }
 }
