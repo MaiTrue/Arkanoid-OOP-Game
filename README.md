@@ -18,7 +18,9 @@
 
 ### Kiên:
 - Độ phức tạp game: hiển thị điểm, số mạng của người chơi  
-- Reset lại game mới  
+- Reset lại game mới
+- Hướng dẫn game
+- Power up : khiên bảo vệ
 
 ---
 
@@ -94,7 +96,7 @@ Trò chơi kết thúc khi hết gạch (thắng) hoặc hết mạng (thua).
 - **BrickDisplay.java:** Tải trước toàn bộ tài nguyên ảnh gạch, bóng, paddle, power-up để đảm bảo hiệu năng.  
 - **SoundManager.java:** Quản lý và preload toàn bộ âm thanh (.wav, .mp3).  
 - **PowerUp.java (Abstract):** Lớp cha trừu tượng định nghĩa `applyEffect(GameManager m)` và `removeEffect(GameManager m)`.  
-- **ExpandPaddlePowerUp.java / FastBallPowerUp.java / ReverseControlsPowerUp.java:** Các lớp kế thừa thực thi hiệu ứng riêng.
+- **ExpandPaddlePowerUp.java / FastBallPowerUp.java / ReverseControlsPowerUp.java / ShieldPowerUp.java:** Các lớp kế thừa thực thi hiệu ứng riêng.
 
 ### Package `Patterns`
 - **PikachuPattern.java:** Chứa ma trận `int[][]` mô tả gạch hình Pikachu.  
