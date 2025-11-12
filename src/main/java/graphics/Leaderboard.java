@@ -10,7 +10,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -41,24 +40,23 @@ public class Leaderboard extends StackPane {
 
     private void initializeUI() {
         LeaderboardManager manager = LeaderboardManager.getInstance();
+        // Chỉ lấy danh sách Top Scores
         List<GameRecord> topScores = manager.getTopScores();
-        List<GameRecord> recentHistory = manager.getRecentHistory();
 
         VBox mainBox = createMenuVBox();
-        Label title = createTitle("BẢNG XẾP HẠNG & LỊCH SỬ CHƠI");
 
-        HBox contentBox = new HBox(50);
-        contentBox.setAlignment(Pos.CENTER);
+        // Cập nhật Tiêu đề chỉ hiển thị Bảng Xếp Hạng Top 5
+        Label title = createTitle("BẢNG XẾP HẠNG TOP 5");
 
-        VBox topScoresBox = createRecordVBox("TOP ĐIỂM CAO NHẤT", topScores, true);
-        VBox recentHistoryBox = createRecordVBox("LẦN CHƠI GẦN NHẤT", recentHistory, false);
+        // Tạo VBox chỉ chứa bảng xếp hạng Top Scores
+        // Sử dụng phương thức tạo VBox cho kỷ lục, đặt isTopScore=true
+        VBox topScoresBox = createRecordVBox("TOP 5 ĐIỂM CAO NHẤT", topScores, true);
 
-        contentBox.getChildren().addAll(topScoresBox, recentHistoryBox);
-
-        // Quay lại Menu (Gọi Menu.show(stage) thông qua Stage đang chứa nó)
+        // Quay lại Menu
         Label back = createMenuItem("BACK", () -> Menu.show((Stage) this.getScene().getWindow()));
 
-        mainBox.getChildren().addAll(title, contentBox, back);
+        // Thêm tiêu đề, bảng xếp hạng Top Scores (thay thế contentBox), và nút Back
+        mainBox.getChildren().addAll(title, topScoresBox, back);
 
         this.getChildren().add(mainBox); // Thêm nội dung vào StackPane
     }
@@ -122,10 +120,12 @@ public class Leaderboard extends StackPane {
         return label;
     }
 
+    // Cập nhật: Loại bỏ tham số isTopScore không cần thiết (vì ta chỉ hiển thị Top Score)
     private static VBox createRecordVBox(String title, List<GameRecord> records, boolean isTopScore) {
         VBox box = new VBox(10);
         box.setAlignment(Pos.TOP_CENTER);
-        box.setPrefWidth(GameConfig.WINDOW_WIDTH / 2.0 - 50);
+        // Thay đổi kích thước để chiếm phần lớn chiều ngang
+        box.setPrefWidth(GameConfig.WINDOW_WIDTH * 0.75);
 
         Label titleLabel = new Label(title);
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
@@ -133,35 +133,32 @@ public class Leaderboard extends StackPane {
 
         GridPane grid = new GridPane();
         grid.setVgap(10);
-        grid.setHgap(15);
+        grid.setHgap(30); // Tăng Hgap để cột giãn ra
         grid.setAlignment(Pos.TOP_CENTER);
         grid.setStyle("-fx-padding: 10; -fx-background-color: rgba(0, 0, 0, 0.5); -fx-border-color: #555; -fx-border-width: 2;");
 
-        grid.add(createColumnHeader(isTopScore ? "RANK" : "STT"), 0, 0);
+        // Chỉ hiển thị 4 cột: RANK, PLAYER, TIME, SCORE
+        grid.add(createColumnHeader("RANK"), 0, 0);
         grid.add(createColumnHeader("PLAYER"), 1, 0);
         grid.add(createColumnHeader("TIME"), 2, 0);
         grid.add(createColumnHeader("SCORE"), 3, 0);
-        if (!isTopScore) {
-            grid.add(createColumnHeader("WHEN"), 4, 0);
-        }
 
         int row = 1;
         for (GameRecord record : records) {
             grid.add(createRecordLabel(String.valueOf(row)), 0, row);
             grid.add(createRecordLabel(record.getPlayerName()), 1, row);
+            // Sử dụng getFormattedTime() đã có
             grid.add(createRecordLabel(record.getFormattedTime()), 2, row);
             grid.add(createRecordLabel(String.valueOf(record.getScore())), 3, row);
 
-            if (!isTopScore) {
-                grid.add(createRecordLabel(record.getFormattedTimestamp()), 4, row);
-            }
             row++;
         }
 
         if (records.isEmpty()) {
             Label emptyLabel = new Label("(Chưa có dữ liệu)");
             emptyLabel.setTextFill(Color.GRAY);
-            grid.add(emptyLabel, 0, 1, isTopScore ? 4 : 5, 1);
+            // Căn giữa 4 cột
+            grid.add(emptyLabel, 0, 1, 4, 1);
             GridPane.setHalignment(emptyLabel, javafx.geometry.HPos.CENTER);
         }
 

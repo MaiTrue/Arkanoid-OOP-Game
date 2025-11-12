@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /** LeaderboardManager: Singleton để quản lý danh sách kỷ lục. */
 public class LeaderboardManager {
     private static LeaderboardManager instance;
     private List<GameRecord> records;
     private static final String FILE_NAME = "leaderboard.ser";
-    private static final int MAX_DISPLAY_RECORDS = 10; // Số lượng hiển thị tối đa
+    // Đã thay đổi để phù hợp với yêu cầu mới
+    private static final int MAX_DISPLAY_RECORDS = 5;
 
     private LeaderboardManager() {
         records = loadRecords();
@@ -24,6 +24,7 @@ public class LeaderboardManager {
         }
         return instance;
     }
+// ... (Các phương thức loadRecords, saveRecords, addRecord giữ nguyên)
 
     @SuppressWarnings("unchecked")
     private List<GameRecord> loadRecords() {
@@ -54,29 +55,37 @@ public class LeaderboardManager {
 
     public void addRecord(GameRecord record) {
         records.add(record);
-        // Sau khi thêm, lưu ngay lập tức để đảm bảo tính kịp thời cho lịch sử gần nhất
+        // Sau khi thêm, lưu ngay lập tức
         saveRecords();
     }
 
-    /**
-     * Lấy TOP 10 theo điểm số (sắp xếp giảm dần). Phụ: thời gian chơi ngắn hơn sẽ được ưu tiên.
-     */
-    public List<GameRecord> getTopScores() {
-        return records.stream()
-                .sorted(Comparator
-                        .comparingInt(GameRecord::getScore).reversed() // Điểm cao nhất lên đầu
-                        .thenComparingLong(GameRecord::getTimeElapsedSeconds)) // Nếu bằng điểm, thời gian ngắn hơn lên đầu
-                .limit(MAX_DISPLAY_RECORDS)
-                .collect(Collectors.toList());
-    }
 
     /**
-     * Lấy 10 lần chơi gần nhất (sắp xếp theo timestamp giảm dần).
+     * Lấy TOP MAX_DISPLAY_RECORDS (5 người) theo điểm số giảm dần,
+     * ưu tiên thời gian chơi ngắn hơn nếu điểm bằng nhau.
+     * * CHÚ Ý: Đã bỏ từ khóa 'static' để truy cập biến 'records'.
      */
-    public List<GameRecord> getRecentHistory() {
-        return records.stream()
-                .sorted(Comparator.comparingLong(GameRecord::getTimestampMillis).reversed()) // Mới nhất lên đầu
-                .limit(MAX_DISPLAY_RECORDS)
-                .collect(Collectors.toList());
+    public List<GameRecord> getTopScores() { // <-- PHẢI CÓ TÊN NÀY
+        // 1. Tạo bản sao danh sách để sắp xếp
+        List<GameRecord> sortedRecords = new ArrayList<>(this.records);
+
+        // 2. Định nghĩa Comparator: Score DESC, Time ASC
+        Collections.sort(sortedRecords, new Comparator<GameRecord>() {
+            @Override
+            public int compare(GameRecord r1, GameRecord r2) {
+                int scoreComparison = Integer.compare(r2.getScore(), r1.getScore());
+                if (scoreComparison != 0) {
+                    return scoreComparison;
+                }
+                return Long.compare(r1.getTimeElapsedSeconds(), r2.getTimeElapsedSeconds());
+            }
+        });
+
+        // 3. Giới hạn số lượng bản ghi trả về (ví dụ MAX_DISPLAY_RECORDS = 5)
+        int limit = Math.min(sortedRecords.size(), MAX_DISPLAY_RECORDS);
+
+        return sortedRecords.subList(0, limit);
     }
+    // Phương thức cũ bị lỗi sẽ được xóa hoặc đổi tên.
+    // Đã thay thế logic của loadLeaderboard() tĩnh bằng getTopLeaderboard() không tĩnh.
 }
