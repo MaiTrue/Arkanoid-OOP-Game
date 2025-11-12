@@ -227,8 +227,74 @@ public class Menu {
     }
 
     // Phương thức gọi Leaderboard (Đã chuyển sang gọi Leaderboard.java)
+    // Thêm vào các hằng số ở đầu lớp Menu
+    private static final Font LEADERBOARD_TITLE_FONT = Font.font("Verdana", FontWeight.EXTRA_BOLD, 50);
+    private static final Font LEADERBOARD_FONT = Font.font("Arial", FontWeight.NORMAL, 24);
+    private static final Font LEADERBOARD_HEADER_FONT = Font.font("Arial", FontWeight.BOLD, 28);
+
+
+    // Thay thế phương thức showLeaderboard(Stage stage) hiện tại bằng phương thức này:
     private static void showLeaderboard(Stage stage) {
-        Leaderboard leaderboard = new Leaderboard();
-        leaderboard.show(stage);
+        // 1. Tải 5 người chơi cao nhất (giả sử LeaderboardManager.loadLeaderboard() đã được sửa)
+        List<GameRecord> records = LeaderboardManager.getInstance().getTopScores();
+
+        VBox leaderboardBox = createMenuVBox();
+
+        Label title = new Label("BẢNG XẾP HẠNG (TOP 5)");
+        title.setFont(LEADERBOARD_TITLE_FONT);
+        title.setTextFill(Color.web("#FFFFFF")); // Màu trắng nổi bật
+        title.setEffect(new DropShadow(10, Color.web("#FF4500"))); // Bóng đỏ cam
+
+        // 2. Tạo GridPane để định dạng dữ liệu
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setHgap(30); // Khoảng cách cột
+        grid.setVgap(15); // Khoảng cách dòng
+        grid.setLayoutY(title.getFont().getSize() + 50); // Đặt lưới xuống dưới tiêu đề
+
+        // Tiêu đề cột
+        grid.add(createLeaderboardLabel("RANK", LEADERBOARD_HEADER_FONT), 0, 0);
+        grid.add(createLeaderboardLabel("TÊN", LEADERBOARD_HEADER_FONT), 1, 0);
+        grid.add(createLeaderboardLabel("ĐIỂM", LEADERBOARD_HEADER_FONT), 2, 0);
+        grid.add(createLeaderboardLabel("THỜI GIAN", LEADERBOARD_HEADER_FONT), 3, 0);
+
+
+        // 3. Hiển thị dữ liệu
+        for (int i = 0; i < records.size(); i++) {
+            GameRecord record = records.get(i);
+            int rank = i + 1;
+
+            // Định dạng thời gian (ví dụ: 01:30)
+            long totalSeconds = record.getTimeElapsedSeconds() ;
+            long minutes = totalSeconds / 60;
+            long seconds = totalSeconds % 60;
+            String timeStr = String.format("%02d:%02d", minutes, seconds);
+
+            grid.add(createLeaderboardLabel(String.valueOf(rank), LEADERBOARD_FONT), 0, i + 1);
+            grid.add(createLeaderboardLabel(record.getPlayerName(), LEADERBOARD_FONT), 1, i + 1);
+            grid.add(createLeaderboardLabel(String.valueOf(record.getScore()), LEADERBOARD_FONT), 2, i + 1);
+            grid.add(createLeaderboardLabel(timeStr, LEADERBOARD_FONT), 3, i + 1);
+        }
+
+        Label back = createMenuItem("BACK", () -> show(stage));
+
+        leaderboardBox.getChildren().addAll(title, grid, back);
+        VBox.setVgrow(grid, javafx.scene.layout.Priority.ALWAYS); // Cho phép grid giãn nở
+
+        // Đặt Scene
+        Scene scene = new Scene(new StackPane(leaderboardBox), GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
+        ((StackPane) scene.getRoot()).setStyle(BG_STYLE); // Dùng background chính của Menu
+        stage.setScene(scene);
+        stage.setTitle("Arkanoid - Bảng Xếp Hạng");
+    }
+
+
+    // Thêm phương thức helper mới để tạo Label cho Leaderboard
+    private static Label createLeaderboardLabel(String text, Font font) {
+        Label label = new Label(text);
+        label.setFont(font);
+        label.setTextFill(Color.WHITE); // In chữ trắng lên nền
+        label.setEffect(new DropShadow(2, Color.BLACK)); // Thêm bóng để nổi bật hơn
+        return label;
     }
 }
