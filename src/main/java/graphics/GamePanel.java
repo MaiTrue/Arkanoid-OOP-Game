@@ -30,30 +30,30 @@ import java.util.Iterator;
 import javafx.application.Platform;
 import javafx.animation.Timeline;
 
-    public class GamePanel extends Pane {
-        private final Canvas canvas;
-        private final GraphicsContext gc;
-        private final GameManager manager;
-        private Group brickGroup;
-        private boolean gameOver = false;
-        private boolean leftPressed = false;
-        private boolean rightPressed = false;
-        private long lastFrameTime = 0;
-        private ImageView[] hearts = new ImageView[3];
-        private Text scoreText;
-        private Line divider;
-        private Button restartButton;
-        private Button returnButton;
-        private boolean ballMoving = false;
-        private SoundManager soundManager;
-        private ImageView background;
-        private ImageView backgroundEndView;
-        private AnimationTimer gameTimer;
-        private long startTimeNano;
-        public LeaderboardManager leaderboardManager;
-        private boolean isWin = false;
-        private boolean isPaused = false;
-        private ImageView pauseImageView;
+public class GamePanel extends Pane {
+    private final Canvas canvas;
+    private final GraphicsContext gc;
+    private final GameManager manager;
+    private Group brickGroup;
+    private boolean gameOver = false;
+    private boolean leftPressed = false;
+    private boolean rightPressed = false;
+    private long lastFrameTime = 0;
+    private ImageView[] hearts = new ImageView[3];
+    private Text scoreText;
+    private Line divider;
+    private Button restartButton;
+    private Button returnButton;
+    private boolean ballMoving = false;
+    private SoundManager soundManager;
+    private ImageView background;
+    private ImageView backgroundEndView;
+    private AnimationTimer gameTimer;
+    private long startTimeNano;
+    public LeaderboardManager leaderboardManager;
+    private boolean isWin = false;
+    private boolean isPaused = false;
+    private ImageView pauseImageView;
 
     public GamePanel(int[][] pattern, int level) {
         this.setPrefSize(GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
