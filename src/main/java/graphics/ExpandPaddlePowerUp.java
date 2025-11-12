@@ -11,14 +11,12 @@ public class ExpandPaddlePowerUp extends PowerUp {
 
     @Override
     public void applyEffect(GameManager manager) {
-        // Lấy paddle từ manager
         Paddle paddle = manager.getPaddle();
         paddle.setPaddleWidth(paddle.getOriginalWidth() * 1.5);
     }
 
     @Override
     public void removeEffect(GameManager manager) {
-        // Lấy paddle từ manager
         Paddle paddle = manager.getPaddle();
         paddle.setPaddleWidth(paddle.getOriginalWidth());
     }

@@ -4,18 +4,12 @@ import base.MovableObject;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-/**
- * Ball kế thừa MovableObject, hiển thị bằng ImageView.
- * Giữ nguyên logic di chuyển/fizx collisions như cậu có.
- */
 public class Ball extends MovableObject {
     private final ImageView ballView;
-    private double dx = 300;  // tốc độ ngang (pixel per frame như code gốc)
-    private double dy = -300; // tốc độ dọc
-
+    private double dx = 300;
+    private double dy = -300;
     private final double originalDx = 300;
     private final double originalDy = -300;
-
     private final double startX;
     private final double startY;
 
@@ -61,18 +55,11 @@ public class Ball extends MovableObject {
         return withinXRange && touchingTop;
     }
 
-    /**
-     * Đặt tốc độ mới, giữ nguyên hướng.
-     * @param newSpeed Độ lớn tốc độ mới (ví dụ: 4)
-     */
     public void setSpeed(double newSpeed) {
         dx = (dx > 0) ? newSpeed : -newSpeed;
         dy = (dy > 0) ? newSpeed : -newSpeed;
     }
 
-    /**
-     * Trả về tốc độ gốc, giữ nguyên hướng.
-     */
     public void resetSpeed() {
         dx = (dx > 0) ? originalDx : -originalDx;
         dy = (dy > 0) ? originalDy : -originalDy;
@@ -89,12 +76,10 @@ public class Ball extends MovableObject {
 
     @Override
     public void update(double deltaTime) {
-        // giữ trống — GamePanel gọi move() trực tiếp.
     }
 
     @Override
     public void render(javafx.scene.canvas.GraphicsContext gc) {
-        // not used (using ImageView)
     }
 
     public double getX() { return ballView.getX(); }

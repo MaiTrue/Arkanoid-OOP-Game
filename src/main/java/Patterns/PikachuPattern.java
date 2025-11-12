@@ -1,7 +1,6 @@
 package Patterns;
 
 public class PikachuPattern {
-    // 0 = trống, 1 = vàng, 2 = đỏ, 3 = trắng
     public static final int[][] DATA = {
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},

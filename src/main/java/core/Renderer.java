@@ -5,7 +5,6 @@ import javafx.scene.paint.Color;
 
 public class Renderer {
     private GraphicsContext gc;
-
     public Renderer(GraphicsContext gc) {
         this.gc = gc;
     }

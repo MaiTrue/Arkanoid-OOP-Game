@@ -14,7 +14,7 @@ public class Paddle extends MovableObject {
     private final ImageView paddleView;
     private double speed = 600; // pixel mỗi giây
     private final double originalWidth;
-    private GameManager manager; // 🔥 Tham chiếu đến GameManager để kiểm tra hiệu ứng đảo điều khiển
+    private GameManager manager;
 
     public Paddle(double x, double y, double width, double height) {
         super(x, y, width, height);
@@ -36,14 +36,12 @@ public class Paddle extends MovableObject {
         paddleView.setFitWidth(width);
         paddleView.setFitHeight(height);
 
-        // đồng bộ fields
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
     }
 
-    // 🔥 Gắn tham chiếu GameManager để Paddle biết khi nào điều khiển bị đảo
     public void setGameManager(GameManager manager) {
         this.manager = manager;
     }
@@ -81,7 +79,6 @@ public class Paddle extends MovableObject {
         return originalWidth;
     }
 
-    // Di chuyển sang trái — có deltaTime để mượt hơn
     public void moveLeft(double deltaTime) {
         boolean reversed = (manager != null && manager.isControlsReversed());
 
@@ -96,7 +93,6 @@ public class Paddle extends MovableObject {
         this.x = newX;
     }
 
-    // Di chuyển sang phải — có deltaTime để mượt hơn
     public void moveRight(double deltaTime, double windowWidth) {
         boolean reversed = (manager != null && manager.isControlsReversed());
 
@@ -113,12 +109,10 @@ public class Paddle extends MovableObject {
 
     @Override
     public void update(double deltaTime) {
-        // Ở thiết kế hiện tại GamePanel gọi moveLeft/moveRight trực tiếp.
     }
 
     @Override
     public void render(javafx.scene.canvas.GraphicsContext gc) {
-        // Không dùng, vì dùng ImageView
     }
 
     public Rectangle2D getBounds() {
@@ -131,7 +125,6 @@ public class Paddle extends MovableObject {
         double actualSpeed = speed;
         double newX = paddleView.getX();
 
-        // Nếu đang đảo điều khiển: đảo hướng
         boolean reversed = manager.isControlsReversed();
 
         if (movingLeft) {
@@ -140,7 +133,6 @@ public class Paddle extends MovableObject {
             newX += (reversed ? -actualSpeed : actualSpeed) * deltaTime;
         }
 
-        // Giới hạn biên
         if (newX < 0) newX = 0;
         if (newX + paddleView.getFitWidth() > windowWidth)
             newX = windowWidth - paddleView.getFitWidth();

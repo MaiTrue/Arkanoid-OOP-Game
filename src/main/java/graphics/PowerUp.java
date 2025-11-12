@@ -11,7 +11,7 @@ public abstract class PowerUp extends GameObject {
     protected String type;
     protected double duration;
     protected ImageView imageView;
-    protected static final double FIXED_SIZE = 50; // ép size chung cho mọi vật phẩm
+    protected static final double FIXED_SIZE = 50;
 
     public PowerUp(double x, double y, String type, double duration, Image image) {
         super(x, y, FIXED_SIZE, FIXED_SIZE);
@@ -31,7 +31,7 @@ public abstract class PowerUp extends GameObject {
 
     @Override
     public void update(double deltaTime) {
-        y += 150 * deltaTime; // rơi xuống
+        y += 150 * deltaTime;
         imageView.setY(y);
     }
 
